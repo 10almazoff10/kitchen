@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Обеды</title>
+</head>
+<body>
+<h2>Привет, <span th:text="${userName}">User</span>!</h2>
+
+<h3>Создать заказ</h3>
+<form method="post" action="/create-order">
+    <input type="url" name="restaurantUrl" placeholder="Ссылка на ресторан" required />
+    <input type="datetime-local" name="deadline" required />
+    <button type="submit">Создать заказ</button>
+</form>
+
+<h3>Активные заказы</h3>
+<ul>
+    <li th:each="order : ${activeOrders}">
+        <a th:href="@{/order/{id}(id=${order.id})}" th:text="${order.restaurantUrl}">Restaurant</a>
+        <br/>
+        <small>Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span></small>
+        <br/>
+        <form method="post" th:action="@{/close-order/{id}(id=${order.id})}" style="display:inline;">
+            <button type="submit">Закрыть заказ</button>
+        </form>
+    </li>
+</ul>
+</body>
+</html>

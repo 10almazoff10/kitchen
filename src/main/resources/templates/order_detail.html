@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Заказ</title>
+</head>
+<body>
+<h2>Заказ: <a th:href="${order.restaurantUrl}" target="_blank">Ссылка на ресторан</a></h2>
+<p>Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span></p>
+
+<h3>Добавить блюдо</h3>
+<form th:action="@{/add-item/{id}(id=${order.id})}" method="post">
+    <input type="text" name="item" placeholder="Что заказываете?" required />
+    <input type="number" name="price" placeholder="Цена" step="0.01" />
+    <button type="submit">Добавить</button>
+</form>
+
+<h3>Заказы пользователей</h3>
+<ul>
+    <li>Здесь можно добавить список заказов пользователей (для этого нужно доработать контроллер)</li>
+</ul>
+</body>
+</html>
