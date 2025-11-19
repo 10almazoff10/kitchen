@@ -2,21 +2,127 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Заказ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .header-logo {
+            background-color: #343a40;
+            padding: 15px 0;
+            margin-bottom: 30px;
+        }
+
+        .header-logo img {
+            height: 40px;
+        }
+
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .order-info-card {
+            background-color: #e7f3ff; /* Светло-голубой фон для информации о заказе */
+            border-left: 4px solid #0d6efd; /* Синяя полоса слева */
+        }
+
+        .order-item {
+            background-color: #fff;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body>
-<h2>Заказ: <a th:href="${order.restaurantUrl}" target="_blank">Ссылка на ресторан</a></h2>
-<p>Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span></p>
 
-<h3>Добавить блюдо</h3>
-<form th:action="@{/add-item/{id}(id=${order.id})}" method="post">
-    <input type="text" name="item" placeholder="Что заказываете?" required />
-    <input type="number" name="price" placeholder="Цена" step="0.01" />
-    <button type="submit">Добавить</button>
-</form>
+<!-- Header с логотипом -->
+<header class="header-logo">
+    <div class="container">
+        <a href="https://kitchen.soft-logic.team/" target="_blank">
+            <img src="https://soft-logic.ru/bitrix/templates/softlogic/images/logo-white.svg"
+                 alt="Логотип Soft-Logic"
+                 class="img-fluid">
+        </a>
+    </div>
+</header>
 
-<h3>Заказы пользователей</h3>
-<ul>
-    <li>Здесь можно добавить список заказов пользователей (для этого нужно доработать контроллер)</li>
-</ul>
+<!-- Основной контент -->
+<div class="main-content">
+    <!-- Информация о заказе -->
+    <div class="card order-info-card mb-4">
+        <div class="card-body">
+            <h2 class="card-title h3">
+                Заказ: <a th:href="${order.restaurantUrl}" target="_blank" class="text-decoration-none">Ссылка на ресторан</a>
+            </h2>
+            <p class="card-text">
+                Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Форма добавления блюда -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="card-title">Добавить блюдо</h3>
+            <form th:action="@{/add-item/{id}(id=${order.id})}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label for="item" class="form-label">Что заказываете?</label>
+                        <input type="text" class="form-control" id="item" name="item" placeholder="Название блюда" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="price" class="form-label">Цена</label>
+                        <input type="number" class="form-control" id="price" name="price" placeholder="0.00" step="0.01" min="0"/>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Заказы пользователей -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">Заказы пользователей</h3>
+        </div>
+        <div class="card-body">
+            <ul class="list-unstyled">
+                <li class="order-item">
+                    <!-- Пример элемента списка. Здесь будет цикл th:each, когда вы добавите логику в контроллер -->
+                    <strong>Пользователь:</strong> <span th:text="${#authentication?.name ?: 'Аноним'}"></span><br>
+                    <strong>Блюдо:</strong> <span th:text="${orderItem?.item ?: 'Пример блюда'}"></span><br>
+                    <strong>Цена:</strong> <span th:text="${orderItem?.price ?: '0.00'}"></span> руб.
+                </li>
+                <li class="order-item">
+                    <strong>Пользователь:</strong> <span>Аноним</span><br>
+                    <strong>Блюдо:</strong> <span>Салат Цезарь</span><br>
+                    <strong>Цена:</strong> <span>350.00</span> руб.
+                </li>
+                <!-- Этот блок-заглушка -->
+                <div class="alert alert-info" role="alert">
+                    <strong>Заметка:</strong> Для отображения реальных заказов пользователей необходимо доработать контроллер и передать соответствующий список в модель.
+                </div>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Кнопка возврата к списку заказов -->
+    <div class="mt-3 text-center">
+        <a href="/" class="btn btn-secondary">Вернуться к активным заказам</a>
+    </div>
+
+</div>
+
+<!-- Bootstrap JS (опционально) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

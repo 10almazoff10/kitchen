@@ -29,7 +29,7 @@ public class MainController {
 
     @GetMapping("/login")
     public String login() {
-        return "order_form";
+        return "login_form";
     }
 
     @PostMapping("/login")
