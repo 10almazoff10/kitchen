@@ -51,4 +51,19 @@ public class KitchenService {
 
         userOrderRepo.save(userOrder);
     }
+    public List<UserOrder> getUsersItemsInOrder(Long orderId) {
+        Order order = orderRepo.findById(orderId).orElseThrow();
+        return userOrderRepo.getUserOrdersByOrder(order);
+
+//
+//        User user = userRepo.findById(userId).orElseThrow();
+//
+//        UserOrder userOrder = new UserOrder();
+//        userOrder.setOrder(order);
+//        userOrder.setUser(user);
+//        userOrder.setItemDescription(item);
+//        userOrder.setPrice(price);
+//
+//        userOrderRepo.save(userOrder);
+    }
 }

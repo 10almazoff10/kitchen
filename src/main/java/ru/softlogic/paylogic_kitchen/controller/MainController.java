@@ -3,12 +3,15 @@ package ru.softlogic.paylogic_kitchen.controller;
 
 import ru.softlogic.paylogic_kitchen.entity.Order;
 import ru.softlogic.paylogic_kitchen.entity.User;
+import ru.softlogic.paylogic_kitchen.entity.UserOrder;
 import ru.softlogic.paylogic_kitchen.service.KitchenService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 public class MainController {
@@ -75,8 +78,10 @@ public class MainController {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Order not found or closed"));
 
+        List<UserOrder> orderItems = kitchenService.getUsersItemsInOrder(id); // исправлено: UserOrder, а не orderItem
+
         model.addAttribute("order", order);
-        // You can fetch user orders here as well
+        model.addAttribute("orderItems", orderItems); // исправлено: orderItems, а не orderItem
         return "order_detail";
     }
 }
