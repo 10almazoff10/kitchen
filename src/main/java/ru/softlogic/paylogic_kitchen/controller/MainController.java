@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
@@ -46,11 +47,12 @@ public class MainController {
     @PostMapping("/create-order")
     public String createOrder(@RequestParam String restaurantUrl,
                               @RequestParam String deadline,
+                              @RequestParam String paymentData, // добавлено
                               HttpSession session) {
         Long userId = (Long) session.getAttribute("userId");
         User user = kitchenService.findOrCreateUser(kitchenService.findOrCreateUser((String) session.getAttribute("userName")).getName());
         java.time.LocalDateTime deadlineTime = java.time.LocalDateTime.parse(deadline);
-        kitchenService.createOrder(restaurantUrl, deadlineTime, user);
+        kitchenService.createOrder(restaurantUrl, deadlineTime, user, paymentData); // передаём paymentData
         return "redirect:/";
     }
 
@@ -78,10 +80,31 @@ public class MainController {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Order not found or closed"));
 
-        List<UserOrder> orderItems = kitchenService.getUsersItemsInOrder(id); // исправлено: UserOrder, а не orderItem
+        List<UserOrder> orderItems = kitchenService.getUsersItemsInOrder(id);
+
+        // Добавляем подсчёт общей суммы
+        BigDecimal totalAmount = kitchenService.getTotalAmountForOrder(id);
 
         model.addAttribute("order", order);
-        model.addAttribute("orderItems", orderItems); // исправлено: orderItems, а не orderItem
+        model.addAttribute("orderItems", orderItems);
+        model.addAttribute("totalAmount", totalAmount); // <-- добавлено
         return "order_detail";
+    }
+
+    @PostMapping("/mark-added/{userOrderId}")
+    public String markAdded(@PathVariable Long userOrderId) {
+        kitchenService.markUserOrderAsAdded(userOrderId);
+        // Получаем orderId для редиректа обратно на страницу заказа
+        UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
+        Long orderId = userOrder.getOrder().getId();
+        return "redirect:/order/" + orderId;
+    }
+
+    @PostMapping("/mark-paid/{userOrderId}")
+    public String markPaid(@PathVariable Long userOrderId) {
+        kitchenService.markUserOrderAsPaid(userOrderId);
+        UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
+        Long orderId = userOrder.getOrder().getId();
+        return "redirect:/order/" + orderId;
     }
 }

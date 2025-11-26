@@ -21,6 +21,12 @@ public class UserOrder {
     private String itemDescription;
     private BigDecimal price;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isAddedToRestaurantOrder = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isPaid = false;
+
     // constructors, getters, setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -36,4 +42,10 @@ public class UserOrder {
 
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+
+    public boolean isAddedToRestaurantOrder() { return isAddedToRestaurantOrder; }
+    public void setAddedToRestaurantOrder(boolean addedToRestaurantOrder) { isAddedToRestaurantOrder = addedToRestaurantOrder; }
+
+    public boolean isPaid() { return isPaid; }
+    public void setPaid(boolean paid) { isPaid = paid; }
 }

@@ -5,6 +5,7 @@ import ru.softlogic.paylogic_kitchen.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -25,11 +26,12 @@ public class KitchenService {
         return orderRepo.findByIsClosedFalse();
     }
 
-    public Order createOrder(String restaurantUrl, java.time.LocalDateTime deadline, User createdBy) {
+    public Order createOrder(String restaurantUrl, java.time.LocalDateTime deadline, User createdBy, String paymentData) {
         Order order = new Order();
         order.setRestaurantUrl(restaurantUrl);
         order.setDeadlineTime(deadline);
         order.setCreatedBy(createdBy);
+        order.setPaymentData(paymentData); // добавили
         return orderRepo.save(order);
     }
 
@@ -55,15 +57,27 @@ public class KitchenService {
         Order order = orderRepo.findById(orderId).orElseThrow();
         return userOrderRepo.getUserOrdersByOrder(order);
 
-//
-//        User user = userRepo.findById(userId).orElseThrow();
-//
-//        UserOrder userOrder = new UserOrder();
-//        userOrder.setOrder(order);
-//        userOrder.setUser(user);
-//        userOrder.setItemDescription(item);
-//        userOrder.setPrice(price);
-//
-//        userOrderRepo.save(userOrder);
+    }
+
+    public void markUserOrderAsAdded(Long userOrderId) {
+        UserOrder userOrder = userOrderRepo.findById(userOrderId).orElseThrow(() -> new RuntimeException("UserOrder not found"));
+        userOrder.setAddedToRestaurantOrder(true);
+        userOrderRepo.save(userOrder);
+    }
+
+    public UserOrder getUserOrderByUserOrderId(Long userOrderId) {
+        return userOrderRepo.findById(userOrderId).orElseThrow(() -> new RuntimeException("UserOrder not found"));
+    }
+
+    public void markUserOrderAsPaid(Long userOrderId) {
+        UserOrder userOrder = userOrderRepo.findById(userOrderId).orElseThrow(() -> new RuntimeException("UserOrder not found"));
+        userOrder.setPaid(true);
+        userOrderRepo.save(userOrder);
+    }
+    public BigDecimal getTotalAmountForOrder(Long orderId) {
+        List<UserOrder> userOrders = userOrderRepo.findByOrder_Id(orderId);
+        return userOrders.stream()
+                .map(UserOrder::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

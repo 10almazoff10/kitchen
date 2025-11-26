@@ -15,6 +15,9 @@ public class Order {
     private LocalDateTime deadlineTime;
     private boolean isClosed = false;
 
+    @Column(length = 500)
+    private String paymentData;
+
     @ManyToOne
     @JoinColumn(name = "created_by_user_id")
     private User createdBy;
@@ -34,4 +37,7 @@ public class Order {
 
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+
+    public String getPaymentData() { return paymentData; }
+    public void setPaymentData(String paymentData) { this.paymentData = paymentData; }
 }

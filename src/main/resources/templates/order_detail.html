@@ -63,6 +63,11 @@
             <p class="card-text">
                 Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
             </p>
+            <p>
+                <strong>Общая сумма заказа:</strong>
+                <span th:text="${totalAmount}"></span> руб.</p>
+
+            <p><strong>Для оплаты:</strong> <span th:text="${order.paymentData}"></span></p>
         </div>
     </div>
 
@@ -98,7 +103,24 @@
                 <li class="order-item" th:each="item : ${orderItems}">
                     <strong>Пользователь:</strong> <span th:text="${item.user.name}"></span><br>
                     <strong>Блюдо:</strong> <span th:text="${item.itemDescription}"></span><br>
-                    <strong>Цена:</strong> <span th:text="${item.price}"></span> руб.
+                    <strong>Цена:</strong> <span th:text="${item.price}"></span> руб.<br>
+
+                    <!-- Статус добавления в заказ -->
+                    <strong>Добавлено в заказ:</strong>
+                    <input type="checkbox" th:checked="${item.addedToRestaurantOrder}" disabled />
+                    <form th:if="${!item.addedToRestaurantOrder}" method="post" th:action="@{/mark-added/{id}(id=${item.id})}" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-outline-success">Отметить как добавленное</button>
+                    </form>
+                    <span th:if="${item.addedToRestaurantOrder}" class="badge bg-success">Добавлено</span>
+                    <br>
+
+                    <!-- Статус оплаты -->
+                    <strong>Оплата:</strong>
+                    <input type="checkbox" th:checked="${item.paid}" disabled />
+                    <form th:if="${!item.paid}" method="post" th:action="@{/mark-paid/{id}(id=${item.id})}" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Перевёл оплату</button>
+                    </form>
+                    <span th:if="${item.paid}" class="badge bg-primary">Оплачено</span>
                 </li>
                 <li th:if="${#lists.isEmpty(orderItems)}">
                     <em>Пока никто ничего не заказал.</em>
