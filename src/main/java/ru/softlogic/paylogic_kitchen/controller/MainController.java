@@ -28,7 +28,14 @@ public class MainController {
 
         model.addAttribute("userName", userName);
         model.addAttribute("activeOrders", kitchenService.getActiveOrders());
+        model.addAttribute("closedOrders", kitchenService.getClosedOrders()); // добавили
         return "index";
+    }
+
+    @PostMapping("/stop-accepting/{id}")
+    public String stopAccepting(@PathVariable Long id) {
+        kitchenService.stopAcceptingOrders(id);
+        return "redirect:/";
     }
 
     @GetMapping("/login")
@@ -75,7 +82,7 @@ public class MainController {
 
     @GetMapping("/order/{id}")
     public String viewOrder(@PathVariable Long id, Model model) {
-        Order order = kitchenService.getActiveOrders().stream()
+        Order order = kitchenService.getOrders().stream()
                 .filter(o -> o.getId().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Order not found or closed"));
@@ -103,6 +110,18 @@ public class MainController {
     @PostMapping("/mark-paid/{userOrderId}")
     public String markPaid(@PathVariable Long userOrderId) {
         kitchenService.markUserOrderAsPaid(userOrderId);
+        UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
+        Long orderId = userOrder.getOrder().getId();
+        return "redirect:/order/" + orderId;
+    }
+
+    @PostMapping("/edit-item/{userOrderId}")
+    public String editItem(@PathVariable Long userOrderId,
+                           @RequestParam String item,
+                           @RequestParam String price,
+                           HttpSession session) {
+        BigDecimal priceNum = new BigDecimal(price);
+        kitchenService.updateUserOrder(userOrderId, item, priceNum);
         UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
         Long orderId = userOrder.getOrder().getId();
         return "redirect:/order/" + orderId;

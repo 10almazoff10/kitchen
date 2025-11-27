@@ -26,6 +26,9 @@ public class KitchenService {
         return orderRepo.findByIsClosedFalse();
     }
 
+    public List<Order> getOrders(){ return orderRepo.findAll();}
+
+
     public Order createOrder(String restaurantUrl, java.time.LocalDateTime deadline, User createdBy, String paymentData) {
         Order order = new Order();
         order.setRestaurantUrl(restaurantUrl);
@@ -79,5 +82,20 @@ public class KitchenService {
         return userOrders.stream()
                 .map(UserOrder::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+    public void updateUserOrder(Long userOrderId, String itemDescription, BigDecimal price) {
+        UserOrder userOrder = userOrderRepo.findById(userOrderId).orElseThrow(() -> new RuntimeException("UserOrder not found"));
+        userOrder.setItemDescription(itemDescription);
+        userOrder.setPrice(price);
+        userOrderRepo.save(userOrder);
+    }
+    public List<Order> getClosedOrders() {
+        return orderRepo.findByIsClosedTrue();
+    }
+
+    public void stopAcceptingOrders(Long orderId) {
+        Order order = orderRepo.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+        order.setAcceptingOrders(false);
+        orderRepo.save(order);
     }
 }

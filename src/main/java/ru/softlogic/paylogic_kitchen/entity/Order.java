@@ -18,6 +18,9 @@ public class Order {
     @Column(length = 500)
     private String paymentData;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isAcceptingOrders = true;
+
     @ManyToOne
     @JoinColumn(name = "created_by_user_id")
     private User createdBy;
@@ -34,6 +37,9 @@ public class Order {
 
     public boolean isClosed() { return isClosed; }
     public void setClosed(boolean closed) { isClosed = closed; }
+
+    public boolean isAcceptingOrders() { return isAcceptingOrders; }
+    public void setAcceptingOrders(boolean acceptingOrders) { isAcceptingOrders = acceptingOrders; }
 
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }

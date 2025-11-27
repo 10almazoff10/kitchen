@@ -102,10 +102,29 @@
             <ul class="list-unstyled">
                 <li class="order-item" th:each="item : ${orderItems}">
                     <strong>Пользователь:</strong> <span th:text="${item.user.name}"></span><br>
-                    <strong>Блюдо:</strong> <span th:text="${item.itemDescription}"></span><br>
-                    <strong>Цена:</strong> <span th:text="${item.price}"></span> руб.<br>
 
-                    <!-- Статус добавления в заказ -->
+                    <!-- Показываем блюдо и цену, если НЕ в режиме редактирования -->
+                    <div th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
+                        <strong>Блюдо:</strong> <span th:text="${item.itemDescription}"></span><br>
+                        <strong>Цена:</strong> <span th:text="${item.price}"></span> руб.<br>
+                        <!-- Кнопка редактировать -->
+                        <form method="get" style="display:inline;">
+                            <input type="hidden" name="editId" th:value="${item.id}" />
+                            <button type="submit" class="btn btn-sm btn-outline-warning">Редактировать</button>
+                        </form>
+                    </div>
+
+                    <!-- Форма редактирования -->
+                    <div th:if="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
+                        <form th:action="@{/edit-item/{id}(id=${item.id})}" method="post">
+                            <input type="text" name="item" th:value="${item.itemDescription}" required />
+                            <input type="number" name="price" th:value="${item.price}" step="0.01" required />
+                            <button type="submit" class="btn btn-sm btn-success">Сохранить</button>
+                            <a th:href="@{/order/{id}(id=${order.id})}" class="btn btn-sm btn-secondary">Отмена</a>
+                        </form>
+                    </div>
+
+                    <!-- Остальные поля: добавлено, оплачено -->
                     <strong>Добавлено в заказ:</strong>
                     <input type="checkbox" th:checked="${item.addedToRestaurantOrder}" disabled />
                     <form th:if="${!item.addedToRestaurantOrder}" method="post" th:action="@{/mark-added/{id}(id=${item.id})}" style="display:inline;">
@@ -114,7 +133,6 @@
                     <span th:if="${item.addedToRestaurantOrder}" class="badge bg-success">Добавлено</span>
                     <br>
 
-                    <!-- Статус оплаты -->
                     <strong>Оплата:</strong>
                     <input type="checkbox" th:checked="${item.paid}" disabled />
                     <form th:if="${!item.paid}" method="post" th:action="@{/mark-paid/{id}(id=${item.id})}" style="display:inline;">
