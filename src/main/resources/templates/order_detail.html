@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Заказ</title>
-    <!-- Bootstrap CSS -->
+    <title th:text="'Заказ №' + ${order.id}"></title>    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -44,7 +43,7 @@
 <!-- Header с логотипом -->
 <header class="header-logo">
     <div class="container">
-        <a href="https://kitchen.soft-logic.team/" target="_blank">
+        <a href="/">
             <img src="https://soft-logic.ru/bitrix/templates/softlogic/images/logo-white.svg"
                  alt="Логотип Soft-Logic"
                  class="img-fluid">
@@ -72,7 +71,7 @@
     </div>
 
     <!-- Форма добавления блюда -->
-    <div class="card mb-4">
+    <div class="card mb-4" th:if="!${order.closed}">
         <div class="card-body">
             <h3 class="card-title">Добавить блюдо</h3>
             <form th:action="@{/add-item/{id}(id=${order.id})}" method="post">
@@ -99,51 +98,76 @@
             <h3 class="h5 mb-0">Заказы пользователей</h3>
         </div>
         <div class="card-body">
-            <ul class="list-unstyled">
-                <li class="order-item" th:each="item : ${orderItems}">
-                    <strong>Пользователь:</strong> <span th:text="${item.user.name}"></span><br>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Пользователь</th>
+                        <th scope="col">Блюдо</th>
+                        <th scope="col">Цена</th>
+                        <th scope="col">Добавлено в заказ</th>
+                        <th scope="col">Оплата</th>
+                        <th scope="col">Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${orderItems}">
+                        <td th:text="${item.id}"></td>
+                        <td th:text="${item.user?.fullName ?: 'Аноним'}"></td>
 
-                    <!-- Показываем блюдо и цену, если НЕ в режиме редактирования -->
-                    <div th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
-                        <strong>Блюдо:</strong> <span th:text="${item.itemDescription}"></span><br>
-                        <strong>Цена:</strong> <span th:text="${item.price}"></span> руб.<br>
-                        <!-- Кнопка редактировать -->
-                        <form method="get" style="display:inline;">
-                            <input type="hidden" name="editId" th:value="${item.id}" />
-                            <button type="submit" class="btn btn-sm btn-outline-warning">Редактировать</button>
-                        </form>
-                    </div>
+                        <!-- Ячейка с блюдом -->
+                        <td style="min-width: 150px;">
+                            <div th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
+                                <span th:text="${item.itemDescription}"></span>
+                            </div>
+                            <div th:if="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
+                                <form th:action="@{/edit-item/{id}(id=${item.id})}" method="post" class="d-flex flex-column">
+                                    <input type="text" name="item" th:value="${item.itemDescription}" class="form-control mb-1" required />
+                                    <input type="number" name="price" th:value="${item.price}" step="0.01" class="form-control mb-1" required />
+                                    <div class="d-flex gap-1">
+                                        <button type="submit" class="btn btn-sm btn-success flex-fill">Сохранить</button>
+                                        <a th:href="@{/order/{id}(id=${order.id})}" class="btn btn-sm btn-secondary flex-fill">Отмена</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
 
-                    <!-- Форма редактирования -->
-                    <div th:if="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
-                        <form th:action="@{/edit-item/{id}(id=${item.id})}" method="post">
-                            <input type="text" name="item" th:value="${item.itemDescription}" required />
-                            <input type="number" name="price" th:value="${item.price}" step="0.01" required />
-                            <button type="submit" class="btn btn-sm btn-success">Сохранить</button>
-                            <a th:href="@{/order/{id}(id=${order.id})}" class="btn btn-sm btn-secondary">Отмена</a>
-                        </form>
-                    </div>
+                        <!-- Цена -->
+                        <td th:text="${item.price} + ' руб.'"></td>
 
-                    <!-- Остальные поля: добавлено, оплачено -->
-                    <strong>Добавлено в заказ:</strong>
-                    <input type="checkbox" th:checked="${item.addedToRestaurantOrder}" disabled />
-                    <form th:if="${!item.addedToRestaurantOrder}" method="post" th:action="@{/mark-added/{id}(id=${item.id})}" style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-outline-success">Отметить как добавленное</button>
-                    </form>
-                    <span th:if="${item.addedToRestaurantOrder}" class="badge bg-success">Добавлено</span>
-                    <br>
+                        <!-- Статус добавления -->
+                        <td>
+                            <span th:if="${item.addedToRestaurantOrder}" class="badge bg-success">Добавлено</span>
+                            <form th:unless="${item.addedToRestaurantOrder}" method="post" th:action="@{/mark-added/{id}(id=${item.id})}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Отметить</button>
+                            </form>
+                        </td>
 
-                    <strong>Оплата:</strong>
-                    <input type="checkbox" th:checked="${item.paid}" disabled />
-                    <form th:if="${!item.paid}" method="post" th:action="@{/mark-paid/{id}(id=${item.id})}" style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Перевёл оплату</button>
-                    </form>
-                    <span th:if="${item.paid}" class="badge bg-primary">Оплачено</span>
-                </li>
-                <li th:if="${#lists.isEmpty(orderItems)}">
-                    <em>Пока никто ничего не заказал.</em>
-                </li>
-            </ul>
+                        <!-- Статус оплаты -->
+                        <td>
+                            <span th:if="${item.paid}" class="badge bg-primary">Оплачено</span>
+                            <form th:unless="${item.paid}" method="post" th:action="@{/mark-paid/{id}(id=${item.id})}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Оплатил</button>
+                            </form>
+                        </td>
+
+                        <!-- Кнопка редактирования -->
+                        <td>
+                            <form method="get" style="display:inline;" th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
+                                <input type="hidden" name="editId" th:value="${item.id}" />
+                                <button type="submit" class="btn btn-sm btn-outline-warning">Редактировать</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Сообщение, если заказов нет -->
+            <div th:if="${#lists.isEmpty(orderItems)}" class="text-center text-muted">
+                <em>Пока никто ничего не заказал.</em>
+            </div>
         </div>
     </div>
 

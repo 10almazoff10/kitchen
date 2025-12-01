@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByIsClosedFalse();
+    List<Order> findByIsClosedFalseOrderByIdDesc();
     List<Order> findByIsClosedTrue();
 }
