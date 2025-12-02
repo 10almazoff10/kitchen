@@ -52,24 +52,45 @@
 <div class="main-content">
     <div class="card mb-4">
         <div class="card-body">
-            <h3 class="card-title">Создать заказ</h3>
-            <form method="post" action="/create-order">
+            <form method="post" th:action="@{/create-order}">
+                <!-- CSRF Token -->
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                <div class="mb-3">
-                    <label for="restaurantUrl" class="form-label">Ссылка на ресторан</label>
-                    <input type="url" class="form-control" id="restaurantUrl" name="restaurantUrl" placeholder="https://..." required />
-                </div>
-                <div class="mb-3">
-                    <label for="deadline" class="form-label">Дедлайн</label>
-                    <input type="datetime-local" class="form-control" id="deadline" name="deadline" required />
-                </div>
-                <div class="mb-3">
-                    <label for="deadline" class="form-label">Оплата</label>
-                    <input type="text" class="form-control" name="paymentData" placeholder="Данные для оплаты, например: 89031234567 - Т-банк" required />
 
+                <div class="card-title text-center mb-4">
+                    <h2 class="h3 mb-3 fw-normal">Создать заказ</h2>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Создать заказ</button>
+                <div class="card-body p-0">
+                    <div class="mb-3 position-relative">
+                        <label for="restaurantId">Ресторан</label>
+                        <div class="input-group">
+                            <select class="form-select" id="restaurantId" name="restaurantId" required>
+                                <option value="">-- Выберите ресторан --</option>
+                                <option th:each="restaurant : ${restaurants}"
+                                        th:value="${restaurant.id}"
+                                        th:text="${restaurant.name}">
+                                </option>
+                            </select>
+                            <a th:href="@{/add-restaurant}" class="btn btn-outline-primary" type="button">
+                                +
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="datetime-local" id="deadline" name="deadline" class="form-control" required>
+                        <label for="deadline">Таймаут приема заказа</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" id="paymentData" name="paymentData" class="form-control" placeholder="Например: 89014322344 - Т-банк" required>
+                        <label for="paymentData">Способ оплаты</label>
+                    </div>
+                </div>
+
+                <button class="w-100 btn btn-lg btn-primary mb-3" type="submit">Создать заказ</button>
+
+                <a th:href="@{/}" class="w-100 btn btn-lg btn-outline-secondary">Назад</a>
             </form>
         </div>
     </div>

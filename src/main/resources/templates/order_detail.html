@@ -59,7 +59,7 @@
     <div class="card order-info-card mb-4">
         <div class="card-body">
             <h2 class="card-title h3">
-                Заказ: <a th:href="${order.restaurantUrl}" target="_blank" class="text-decoration-none">Ссылка на ресторан</a>
+                Заказ: <a th:href="${order.restaurant.websiteUrl}" target="_blank" class="text-decoration-none" th:text="${order.restaurant.name}"></a>
             </h2>
             <p class="card-text">
                 Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
@@ -154,10 +154,9 @@
                             </form>
                         </td>
 
-                        <!-- Кнопка редактирования -->
                         <!-- Кнопки редактирования и удаления -->
                         <td>
-                            <div class="d-flex gap-1">
+                            <div class="d-flex gap-1" th:if="!${order.isClosed}">
                                 <form method="get" style="display:inline;" th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
                                     <input type="hidden" name="editId" th:value="${item.id}" />
                                     <button type="submit" class="btn btn-sm btn-outline-warning" style="width: 32px; height: 32px; padding: 0;">

@@ -57,7 +57,7 @@
     </div>
 
     <div class="card mb-4">
-        <a href="/create_order" type="submit" class="btn btn-primary">Создать заказ</a>
+        <a href="/create-order" type="submit" class="btn btn-primary">Создать заказ</a>
     </div>
     <div class="card mb-4">
         <div class="card-header">
@@ -66,7 +66,7 @@
         <div class="card-body">
             <ul class="list-unstyled">
                 <li th:each="order : ${activeOrders}" class="order-card">
-                    <a th:href="@{/order/{id}(id=${order.id})}" th:text="${order.restaurantUrl}" class="h5 d-block text-decoration-none"></a>
+                    <a th:href="@{/order/{id}(id=${order.id})}" th:text="${order.createdBy.fullName + ' - ' + order.restaurant.name}" class="h5 d-block text-decoration-none"></a>
                     <p class="text-muted mb-1">
                         Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
                     </p>

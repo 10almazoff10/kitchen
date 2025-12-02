@@ -11,7 +11,10 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String restaurantUrl;
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private Restaurant restaurant;
+
     private LocalDateTime deadlineTime;
     private boolean isClosed = false;
 
@@ -29,8 +32,12 @@ public class Order {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getRestaurantUrl() { return restaurantUrl; }
-    public void setRestaurantUrl(String restaurantUrl) { this.restaurantUrl = restaurantUrl; }
+    public Restaurant getRestaurant() { return restaurant; }
+    public void setRestaurant(Restaurant restaurant) { this.restaurant = restaurant; }
+
+    public String getRestaurantUrl() { // getter для совместимости
+        return restaurant != null ? restaurant.getWebsiteUrl() : null;
+    }
 
     public LocalDateTime getDeadlineTime() { return deadlineTime; }
     public void setDeadlineTime(LocalDateTime deadlineTime) { this.deadlineTime = deadlineTime; }

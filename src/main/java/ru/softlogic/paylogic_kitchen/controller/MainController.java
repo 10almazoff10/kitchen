@@ -1,6 +1,7 @@
 package ru.softlogic.paylogic_kitchen.controller;
 
 import ru.softlogic.paylogic_kitchen.entity.Order;
+import ru.softlogic.paylogic_kitchen.entity.Restaurant;
 import ru.softlogic.paylogic_kitchen.entity.User;
 import ru.softlogic.paylogic_kitchen.entity.UserOrder;
 import ru.softlogic.paylogic_kitchen.service.KitchenService;
@@ -9,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import ru.softlogic.paylogic_kitchen.service.UserService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
 public class MainController {
 
     @Autowired private KitchenService kitchenService;
+    @Autowired private UserService userService;
 
     @GetMapping("/")
     public String home(Authentication auth, Model model) {
@@ -27,15 +30,25 @@ public class MainController {
         String username = auth.getName();
         User user = (User) kitchenService.loadUserByUsername(username);
 
-
         model.addAttribute("userName", user.getFullName());
         model.addAttribute("activeOrders", kitchenService.getActiveOrders());
         model.addAttribute("closedOrders", kitchenService.getClosedOrders());
         model.addAttribute("currentUserId", user.getId());
         return "index";
     }
-    @GetMapping("/create_order")
-    public String createOrderPage() {
+
+    @GetMapping("/create-order")
+    public String showCreateOrderForm(Model model, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String username = auth.getName();
+        User currentUser = (User) userService.loadUserByUsername(username);
+
+        model.addAttribute("userName", currentUser.getFullName());
+        model.addAttribute("currentUserId", currentUser.getId());
+        model.addAttribute("restaurants", kitchenService.getAllRestaurants());
         return "create_order";
     }
 
@@ -47,15 +60,32 @@ public class MainController {
     }
 
     @PostMapping("/create-order")
-    public String createOrder(@RequestParam String restaurantUrl,
+    public String createOrder(@RequestParam Long restaurantId,
                               @RequestParam String deadline,
                               @RequestParam String paymentData,
                               Authentication auth) {
         String username = auth.getName();
-        User user = (User) kitchenService.loadUserByUsername(username);
+        User user = (User) userService.loadUserByUsername(username);
+
+        Restaurant restaurant = kitchenService.getRestaurantById(restaurantId);
         java.time.LocalDateTime deadlineTime = java.time.LocalDateTime.parse(deadline);
-        kitchenService.createOrder(restaurantUrl, deadlineTime, user, paymentData);
+
+        kitchenService.createOrder(restaurant, deadlineTime, user, paymentData);
         return "redirect:/";
+    }
+
+    @GetMapping("/add-restaurant")
+    public String showAddRestaurantForm() {
+        return "add_restaurant_form";
+    }
+
+    @PostMapping("/add-restaurant")
+    public String addRestaurant(@RequestParam String name, @RequestParam String websiteUrl) {
+        Restaurant restaurant = new Restaurant();
+        restaurant.setName(name);
+        restaurant.setWebsiteUrl(websiteUrl);
+        kitchenService.saveRestaurant(restaurant);
+        return "redirect:/create-order";
     }
 
     @PostMapping("/close-order/{id}")

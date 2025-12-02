@@ -14,7 +14,9 @@ public class KitchenService {
     @Autowired private UserRepository userRepo;
     @Autowired private OrderRepository orderRepo;
     @Autowired private UserOrderRepository userOrderRepo;
-    @Autowired private UserService userService; // добавь это
+    @Autowired private UserService userService;
+    @Autowired private RestaurantRepository restaurantRepo;
+    @Autowired private TelegramService telegramService;
 
     public List<Order> getActiveOrders() {
         return orderRepo.findByIsClosedFalseOrderByIdDesc();
@@ -22,13 +24,31 @@ public class KitchenService {
 
     public List<Order> getOrders(){ return orderRepo.findAll();}
 
-    public Order createOrder(String restaurantUrl, java.time.LocalDateTime deadline, User createdBy, String paymentData) {
+    public Order createOrder(Restaurant restaurant, java.time.LocalDateTime deadline, User createdBy, String paymentData) {
         Order order = new Order();
-        order.setRestaurantUrl(restaurantUrl);
+        order.setRestaurant(restaurant);
         order.setDeadlineTime(deadline);
-        order.setCreatedBy(createdBy); // createdBy из app_users
+        order.setCreatedBy(createdBy);
         order.setPaymentData(paymentData);
-        return orderRepo.save(order);
+        Order savedOrder = orderRepo.save(order);
+
+        // Отправляем сообщение в Telegram
+        String message = String.format(
+                "🔔 <b>Новый заказ!</b>\n" +
+                        "👤 Создал: %s\n" +
+                        "🍽 Ресторан: %s\n" +
+                        "⏰ Дедлайн: %s\n" +
+                        "💳 Для оплаты: %s\n" +
+                        "🔗 <a href=\"http://your-domain.com/order/%d\">Перейти к заказу</a>",
+                createdBy.getFullName(),
+                restaurant.getName(),
+                deadline.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")),
+                paymentData,
+                savedOrder.getId()
+        );
+        telegramService.sendMessage(message);
+
+        return savedOrder;
     }
 
     public void addUserOrder(Long orderId, Long userId, String item, java.math.BigDecimal price) {
@@ -104,5 +124,17 @@ public class KitchenService {
 
     public Order getOrderById(Long id) {
         return orderRepo.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+    }
+
+    public List<Restaurant> getAllRestaurants() {
+        return restaurantRepo.findAll();
+    }
+
+    public Restaurant getRestaurantById(Long id) {
+        return restaurantRepo.findById(id).orElseThrow(() -> new RuntimeException("Restaurant not found"));
+    }
+
+    public void saveRestaurant(Restaurant restaurant) {
+        restaurantRepo.save(restaurant);
     }
 }
