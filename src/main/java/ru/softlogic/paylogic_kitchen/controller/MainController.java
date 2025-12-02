@@ -27,9 +27,11 @@ public class MainController {
         String username = auth.getName();
         User user = (User) kitchenService.loadUserByUsername(username);
 
-        model.addAttribute("userName", user.getFullName()); // используем fullName
+
+        model.addAttribute("userName", user.getFullName());
         model.addAttribute("activeOrders", kitchenService.getActiveOrders());
         model.addAttribute("closedOrders", kitchenService.getClosedOrders());
+        model.addAttribute("currentUserId", user.getId());
         return "index";
     }
     @GetMapping("/create_order")
@@ -79,6 +81,13 @@ public class MainController {
         }else{
             return "redirect:/order/" + orderId;
         }
+    }
+    @PostMapping("/delete-item/{userOrderId}")
+    public String deleteItem(@PathVariable Long userOrderId, Authentication auth) {
+        UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId); // получаем до удаления
+        Long orderId = userOrder.getOrder().getId();
+        kitchenService.deleteUserOrder(userOrderId); // теперь удаляем
+        return "redirect:/order/" + orderId;
     }
 
     @GetMapping("/order/{id}")

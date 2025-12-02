@@ -70,7 +70,9 @@
                     <p class="text-muted mb-1">
                         Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
                     </p>
-                    <form method="post" th:action="@{/close-order/{id}(id=${order.id})}" style="display:inline;">
+                    <form method="post" th:action="@{/close-order/{id}(id=${order.id})}"
+                          style="display:inline;"
+                          th:if="${order.createdBy.id == currentUserId}">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Закрыть заказ</button>
                     </form>
                 </li>

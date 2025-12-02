@@ -42,6 +42,11 @@ public class KitchenService {
         userOrderRepo.save(userOrder);
     }
 
+    public void deleteUserOrder(Long userOrderId) {
+        UserOrder userOrder = userOrderRepo.findById(userOrderId).orElseThrow(() -> new RuntimeException("UserOrder not found"));
+        userOrderRepo.delete(userOrder);
+    }
+
     public void closeOrder(Long orderId) {
         Order order = orderRepo.findById(orderId).orElseThrow();
         order.setClosed(true);
