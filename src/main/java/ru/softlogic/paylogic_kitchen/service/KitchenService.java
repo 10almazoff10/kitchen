@@ -1,5 +1,6 @@
 package ru.softlogic.paylogic_kitchen.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import ru.softlogic.paylogic_kitchen.entity.*;
 import ru.softlogic.paylogic_kitchen.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ public class KitchenService {
     @Autowired private UserService userService;
     @Autowired private RestaurantRepository restaurantRepo;
     @Autowired private TelegramService telegramService;
+
+    @Value("${kitchen.base-url}")
+    private String baseUrl;
 
     public List<Order> getActiveOrders() {
         return orderRepo.findByIsClosedFalseOrderByIdDesc();
@@ -39,11 +43,12 @@ public class KitchenService {
                         "🍽 Ресторан: %s\n" +
                         "⏰ Дедлайн: %s\n" +
                         "💳 Для оплаты: %s\n" +
-                        "🔗 <a href=\"http://your-domain.com/order/%d\">Перейти к заказу</a>",
+                        "🔗 <a href=\"%s/order/%d\">Перейти к заказу</a>",
                 createdBy.getFullName(),
                 restaurant.getName(),
                 deadline.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")),
                 paymentData,
+                baseUrl,
                 savedOrder.getId()
         );
         telegramService.sendMessage(message);
