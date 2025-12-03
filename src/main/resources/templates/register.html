@@ -63,12 +63,24 @@
 
         <div class="card-body p-0">
             <div class="form-floating mb-3">
-                <input type="text" id="fullName" name="fullName" class="form-control" placeholder="Иван Иванов" required>
+                <input type="text"
+                       id="fullName"
+                       name="fullName"
+                       class="form-control"
+                       placeholder="Имя и фамилия"
+                       th:value="${fullName}"
+                       required>
                 <label for="fullName">Имя и фамилия</label>
             </div>
 
             <div class="form-floating mb-3">
-                <input type="text" id="username" name="username" class="form-control" placeholder="Логин" required>
+                <input type="text"
+                       id="username"
+                       name="username"
+                       class="form-control"
+                       placeholder="Логин"
+                       th:value="${username}"
+                       required>
                 <label for="username">Логин</label>
             </div>
 
@@ -92,6 +104,11 @@
 
         <a th:href="@{/login}" class="w-100 btn btn-lg btn-outline-secondary">Уже есть аккаунт? Войти</a>
     </form>
+
+    <div th:if="${error}" class="alert alert-danger" role="alert">
+        <span th:text="${error}"></span>
+    </div>
+
 </main>
 
 <script>

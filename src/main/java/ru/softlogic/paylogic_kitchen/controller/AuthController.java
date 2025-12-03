@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.softlogic.paylogic_kitchen.exception.UserRegistrationException;
 import ru.softlogic.paylogic_kitchen.service.UserService;
 
 @Controller
@@ -27,8 +28,17 @@ public class AuthController {
             userService.createUser(username, password, fullName);
             model.addAttribute("success", true);
             return "login";
+        } catch (UserRegistrationException e) {
+            model.addAttribute("error", e.getMessage());
+            // Передаём обратно введённые данные, чтобы пользователю не пришлось заново вводить
+            model.addAttribute("username", username);
+            model.addAttribute("fullName", fullName);
+            return "register";
         } catch (Exception e) {
-            model.addAttribute("error", "Error registering user: " + e.getMessage());
+            // На случай других ошибок
+            model.addAttribute("error", "Произошла ошибка при регистрации. Попробуйте снова.");
+            model.addAttribute("username", username);
+            model.addAttribute("fullName", fullName);
             return "register";
         }
     }

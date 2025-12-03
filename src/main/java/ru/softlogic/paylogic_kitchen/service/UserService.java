@@ -1,6 +1,7 @@
 package ru.softlogic.paylogic_kitchen.service;
 
 import ru.softlogic.paylogic_kitchen.entity.User;
+import ru.softlogic.paylogic_kitchen.exception.UserRegistrationException;
 import ru.softlogic.paylogic_kitchen.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +26,22 @@ public class UserService implements UserDetailsService {
     }
 
     public User createUser(String username, String password, String fullName) {
+        if (userRepo.findByUsername(username).isPresent()) {
+            throw new UserRegistrationException("Пользователь с логином '" + username + "' уже существует.");
+        }
+
+        if (username.length() < 3 || username.length() > 30) {
+            throw new UserRegistrationException("Логин должен быть от 3 до 30 символов.");
+        }
+
+        if (password.length() < 6) {
+            throw new UserRegistrationException("Пароль должен быть не менее 6 символов.");
+        }
+
+        if (fullName.trim().isEmpty()) {
+            throw new UserRegistrationException("Полное имя не может быть пустым.");
+        }
+
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
