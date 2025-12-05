@@ -25,6 +25,9 @@ public class KitchenService {
     public List<Order> getActiveOrders() {
         return orderRepo.findByIsClosedFalseOrderByIdDesc();
     }
+    public List<Order> getClosedOrders() {
+        return orderRepo.findByIsClosedTrueOrderByIdDesc();
+    }
 
     public List<Order> getOrders(){ return orderRepo.findAll();}
 
@@ -110,10 +113,6 @@ public class KitchenService {
         userOrder.setItemDescription(itemDescription);
         userOrder.setPrice(price);
         userOrderRepo.save(userOrder);
-    }
-
-    public List<Order> getClosedOrders() {
-        return orderRepo.findByIsClosedTrue();
     }
 
     public void stopAcceptingOrders(Long orderId) {
