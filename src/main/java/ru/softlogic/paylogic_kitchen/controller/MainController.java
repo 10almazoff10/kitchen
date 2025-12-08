@@ -1,5 +1,6 @@
 package ru.softlogic.paylogic_kitchen.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import ru.softlogic.paylogic_kitchen.entity.Order;
 import ru.softlogic.paylogic_kitchen.entity.Restaurant;
 import ru.softlogic.paylogic_kitchen.entity.User;
@@ -21,6 +22,9 @@ public class MainController {
     @Autowired private KitchenService kitchenService;
     @Autowired private UserService userService;
 
+    @Value("${app.version}")
+    private String appVersion;
+
     @GetMapping("/")
     public String home(Authentication auth, Model model) {
         if (auth == null || !auth.isAuthenticated()) {
@@ -34,6 +38,7 @@ public class MainController {
         model.addAttribute("activeOrders", kitchenService.getActiveOrders());
         model.addAttribute("closedOrders", kitchenService.getClosedOrders());
         model.addAttribute("currentUserId", user.getId());
+        model.addAttribute("appVersion", appVersion);
         return "index";
     }
 
@@ -49,6 +54,8 @@ public class MainController {
         model.addAttribute("userName", currentUser.getFullName());
         model.addAttribute("currentUserId", currentUser.getId());
         model.addAttribute("restaurants", kitchenService.getAllRestaurants());
+        model.addAttribute("appVersion", appVersion);
+
         return "create_order";
     }
 
@@ -130,9 +137,15 @@ public class MainController {
         List<UserOrder> orderItems = kitchenService.getUsersItemsInOrder(id);
         BigDecimal totalAmount = kitchenService.getTotalAmountForOrder(id);
 
+        String username = auth.getName();
+        User user = (User) kitchenService.loadUserByUsername(username);
+
         model.addAttribute("order", order);
         model.addAttribute("orderItems", orderItems);
         model.addAttribute("totalAmount", totalAmount);
+        model.addAttribute("appVersion", appVersion);
+        model.addAttribute("currentUserId", user.getId());
+
         return "order_detail";
     }
 

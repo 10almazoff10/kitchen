@@ -1,0 +1,52 @@
+
+body {
+    background-color: #f8f9fa; /* Светлый фон */
+}
+
+.header-logo {
+    background-color: #343a40; /* Тёмный фон для заголовка */
+    padding: 15px 0;
+    margin-bottom: 30px; /* Отступ между заголовком и основным контентом */
+}
+
+.header-logo img {
+    height: 40px; /* Высота логотипа */
+}
+
+.main-content {
+    max-width: 800px; /* Максимальная ширина контента */
+    margin: 0 auto; /* Центрирование */
+    padding: 0 15px; /* Внутренние отступы по бокам */
+}
+
+.order-card {
+    background-color: #fff; /* Белый фон карточки заказа */
+    border-radius: 0.375rem; /* Скругление углов */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Лёгкая тень */
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Основной стиль для футера */
+.custom-footer {
+    color: #6c757d; /* Цвет текста */
+    text-align: center; /* Центрирование текста */
+    padding: 20px 0; /* Отступы сверху и снизу */
+    margin-top: auto; /* При sticky-footer или flexbox */
+    font-family: Arial, sans-serif;
+    font-size: 0.9em;
+}
+
+/* Стили для контейнера внутри футера */
+.custom-footer .container-fluid {
+    width: 100%;
+    max-width: 1200px; /* Ограничение ширины */
+    margin: 0 auto; /* Центрирование контейнера */
+    padding: 0 15px; /* Внутренние отступы */
+}
+
+/* Стили для текста в параграфе */
+.custom-footer p {
+    margin: 0;
+    line-height: 1.5;
+}

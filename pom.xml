@@ -10,7 +10,7 @@
     </parent>
     <groupId>ru.softlogic</groupId>
     <artifactId>paylogic-kitchen</artifactId>
-    <version>0.4.3</version>
+    <version>0.5.0</version>
     <name>paylogic-kitchen</name>
     <description>Spring Boot project</description>
     <url/>

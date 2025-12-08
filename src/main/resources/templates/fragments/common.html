@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="common-head">
+    <meta charset="UTF-8">
+    <title th:if="${title}" th:text="${title}">Default Title</title>
+    <title th:unless="${title}">Default Title</title>
+    <!-- Ваши общие стили -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/common.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}">
+
+</head>
+
+<body>
+
+<header th:fragment="common-header" class="header-logo">
+    <div class="container">
+        <a href="/">
+            <img src="/img/logo_kitchen.png"
+                 alt="Логотип Paylogic-Kitchen"
+                 class="img-fluid">
+        </a>
+    </div>
+</header>
+
+<footer th:fragment="common-footer" class="custom-footer">
+    <div class="container-fluid">
+        <p>&copy; 2025 Paylogic Kitchen <span th:text="'v' + ${appVersion}">v1.0.0</span></p>
+    </div>
+</footer>
+
+</body>
+</html>

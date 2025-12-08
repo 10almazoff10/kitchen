@@ -2,7 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title th:text="'Заказ №' + ${order.id}"></title>    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/common.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v7.1.0/css/all.css">
     <meta charset="UTF-8">
     <style>
@@ -43,15 +44,8 @@
 <body>
 
 <!-- Header с логотипом -->
-<header class="header-logo">
-    <div class="container">
-        <a href="/">
-            <img src="/img/logo_kitchen.png"
-                 alt="Логотип Soft-Logic"
-                 class="img-fluid">
-        </a>
-    </div>
-</header>
+<header th:replace="fragments/common :: common-header"></header>
+
 
 <!-- Основной контент -->
 <div class="main-content">
@@ -62,7 +56,10 @@
                 Заказ: <a th:href="${order.restaurant.websiteUrl}" target="_blank" class="text-decoration-none" th:text="${order.restaurant.name}"></a>
             </h2>
             <p class="card-text">
-                Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
+                <strong>Организатор:</strong> <span  th:text="${order.createdBy.fullName}"></span>
+            </p>
+            <p class="card-text">
+                <strong>Дедлайн:</strong> <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
             </p>
             <p>
                 <strong>Общая сумма заказа:</strong>
@@ -141,8 +138,12 @@
                         <!-- Статус добавления -->
                         <td>
                             <span th:if="${item.addedToRestaurantOrder}" class="badge bg-success">Добавлено</span>
-                            <form th:unless="${item.addedToRestaurantOrder}" method="post" th:action="@{/mark-added/{id}(id=${item.id})}" style="display:inline;">
-                                <button type="submit" class="btn btn-sm btn-outline-success">Отметить</button>
+                            <form th:unless="${item.addedToRestaurantOrder}"
+                                  th:if="${order.createdBy.id == currentUserId}"
+                                method="post"
+                                th:action="@{/mark-added/{id}(id=${item.id})}"
+                                style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-success">Отметить</button>
                             </form>
                         </td>
 
@@ -190,5 +191,6 @@
 
 <!-- Bootstrap JS (опционально) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<footer th:replace="fragments/common :: common-footer"></footer>
 </body>
 </html>
