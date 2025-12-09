@@ -39,6 +39,8 @@ public class MainController {
         model.addAttribute("closedOrders", kitchenService.getClosedOrders());
         model.addAttribute("currentUserId", user.getId());
         model.addAttribute("appVersion", appVersion);
+        model.addAttribute("title", "Главная");
+
         return "index";
     }
 
@@ -55,6 +57,8 @@ public class MainController {
         model.addAttribute("currentUserId", currentUser.getId());
         model.addAttribute("restaurants", kitchenService.getAllRestaurants());
         model.addAttribute("appVersion", appVersion);
+        model.addAttribute("title", "Создание заказа");
+
 
         return "create_order";
     }
@@ -78,16 +82,26 @@ public class MainController {
         java.time.LocalDateTime deadlineTime = java.time.LocalDateTime.parse(deadline);
 
         kitchenService.createOrder(restaurant, deadlineTime, user, paymentData);
+
         return "redirect:/";
     }
 
     @GetMapping("/add-restaurant")
-    public String showAddRestaurantForm() {
+    public String showAddRestaurantForm(Model model, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("title", "Добавление нового ресторана");
         return "add_restaurant_form";
     }
 
     @PostMapping("/add-restaurant")
-    public String addRestaurant(@RequestParam String name, @RequestParam String websiteUrl) {
+    public String addRestaurant(@RequestParam String name, @RequestParam String websiteUrl, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
         Restaurant restaurant = new Restaurant();
         restaurant.setName(name);
         restaurant.setWebsiteUrl(websiteUrl);
@@ -145,6 +159,7 @@ public class MainController {
         model.addAttribute("totalAmount", totalAmount);
         model.addAttribute("appVersion", appVersion);
         model.addAttribute("currentUserId", user.getId());
+        model.addAttribute("title", "Заказ №" + order.getId());
 
         return "order_detail";
     }
