@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/common :: common-head"></head>
+
+<body class="bg-light">
+
+<!-- Header с логотипом -->
+<header th:replace="fragments/common :: common-header"></header>
+
+<div class="container mt-4">
+
+    <h1 class="mb-4">🏆 Рейтинг пользователей</h1>
+
+    <!-- Топ 3 по тратам за месяц -->
+    <div class="card rating-card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">💰 Больше всего потратил за месяц</h3>
+        </div>
+        <div class="card-body">
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item" th:each="item, iterStat : ${topSpentThisMonth}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
+                            <strong th:text="${item.user.fullName}"></strong>
+                        </div>
+                        <div class="text-end">
+                            <span th:text="${item.value} + ' руб.'"></span>
+                        </div>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Топ 3 по заказам за месяц -->
+    <div class="card rating-card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">🛒 Чаще всех заказывал за месяц</h3>
+        </div>
+        <div class="card-body">
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item" th:each="item, iterStat : ${topOrdersThisMonth}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
+                            <strong th:text="${item.user.fullName}"></strong>
+                        </div>
+                        <div class="text-end">
+                            <span th:text="${item.value} + ' заказов'"></span>
+                        </div>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Топ 3 по тратам за всё время -->
+    <div class="card rating-card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">💸 Больше всего потратил за всё время</h3>
+        </div>
+        <div class="card-body">
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item" th:each="item, iterStat : ${topSpentAllTime}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
+                            <strong th:text="${item.user.fullName}"></strong>
+                        </div>
+                        <div class="text-end">
+                            <span th:text="${item.value} + ' руб.'"></span>
+                        </div>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Топ 3 по заказам за всё время -->
+    <div class="card rating-card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">🛍️ Чаще всех заказывал за всё время</h3>
+        </div>
+        <div class="card-body">
+            <ol class="list-group list-group-numbered">
+                <li class="list-group-item" th:each="item, iterStat : ${topOrdersAllTime}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
+                            <strong th:text="${item.user.fullName}"></strong>
+                        </div>
+                        <div class="text-end">
+                            <span th:text="${item.value} + ' заказов'"></span>
+                        </div>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="fragments/common :: common-footer"></footer>
+
+</body>
+</html>

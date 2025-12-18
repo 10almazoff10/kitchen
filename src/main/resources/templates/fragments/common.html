@@ -22,11 +22,20 @@
 <body>
 
 <header th:fragment="common-header" class="header-logo">
-    <div class="container">
-        <a href="/">
+    <div class="container d-flex align-items-center">
+        <a href="/" class="me-3">
             <img src="/img/logo_kitchen.png"
                  alt="Логотип Paylogic-Kitchen"
-                 class="img-fluid">
+                 class="img-fluid"
+                 style="height: 50px;">
+        </a>
+        <a href="/" th:text="${headerName}" style="text-decoration: none;"
+             class="text-light fw-bold fs-2 me-auto">
+        </a>
+
+        <!-- Кнопка Рейтинг -->
+        <a th:href="@{/rating}" class="btn btn-outline-light">
+            🏆 Рейтинг
         </a>
     </div>
 </header>

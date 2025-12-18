@@ -2,6 +2,7 @@ package ru.softlogic.paylogic_kitchen.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_orders")
@@ -27,6 +28,9 @@ public class UserOrder {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isPaid = false;
 
+    @Column(name = "created_date", nullable = false)
+    private LocalDateTime createdDate = LocalDateTime.now();
+
     // constructors, getters, setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -48,4 +52,7 @@ public class UserOrder {
 
     public boolean isPaid() { return isPaid; }
     public void setPaid(boolean paid) { isPaid = paid; }
+
+    public LocalDateTime getCreatedDate() { return createdDate; }
+    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
 }

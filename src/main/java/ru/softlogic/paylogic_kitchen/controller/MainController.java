@@ -25,6 +25,9 @@ public class MainController {
     @Value("${app.version}")
     private String appVersion;
 
+    @Value("${app.headerName}")
+    private String headerName;
+
     @GetMapping("/")
     public String home(Authentication auth, Model model) {
         if (auth == null || !auth.isAuthenticated()) {
@@ -40,6 +43,7 @@ public class MainController {
         model.addAttribute("currentUserId", user.getId());
         model.addAttribute("appVersion", appVersion);
         model.addAttribute("title", "Главная");
+        model.addAttribute("headerName", headerName);
 
         return "index";
     }
@@ -58,6 +62,7 @@ public class MainController {
         model.addAttribute("restaurants", kitchenService.getAllRestaurants());
         model.addAttribute("appVersion", appVersion);
         model.addAttribute("title", "Создание заказа");
+        model.addAttribute("headerName", headerName);
 
 
         return "create_order";
@@ -93,6 +98,8 @@ public class MainController {
         }
 
         model.addAttribute("title", "Добавление нового ресторана");
+        model.addAttribute("headerName", headerName);
+
         return "add_restaurant_form";
     }
 
@@ -160,6 +167,8 @@ public class MainController {
         model.addAttribute("appVersion", appVersion);
         model.addAttribute("currentUserId", user.getId());
         model.addAttribute("title", "Заказ №" + order.getId());
+        model.addAttribute("headerName", headerName);
+
 
         return "order_detail";
     }
