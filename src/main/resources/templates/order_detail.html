@@ -31,7 +31,7 @@
         }
 
         .main-content {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 0 15px;
         }
@@ -47,6 +47,27 @@
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             padding: 1rem;
             margin-bottom: 0.5rem;
+        }
+        .rating-stars .star {
+            font-size: 14px;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+            margin-right: 2px;
+            white-space: nowrap;
+        }
+
+        .rating-stars .star:hover,
+        .rating-stars .star.hover {
+            color: #f39c12; /* Цвет при наведении */
+        }
+
+        .rating-stars .star.selected {
+            color: #f1c40f; /* Цвет выбранной звезды */
+        }
+
+        .current-rating {
+            font-size: 16px;
         }
     </style>
 </head>
@@ -117,6 +138,7 @@
                         <th scope="col">Добавлено в заказ</th>
                         <th scope="col">Оплата</th>
                         <th scope="col">Действия</th>
+                        <th scope="col">Оценка</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -185,6 +207,35 @@
                                 </form>
                             </div>
                         </td>
+                        <!-- Оценка блюда -->
+                        <td>
+                            <div th:if="${item.user.id == currentUserId and item.paid}">
+                                <div th:if="${item.rating == 0}">
+                                    <!-- Форма для оценки через звёздочки -->
+                                    <div class="rating-stars" th:id="'rating-' + ${item.id}">
+                                        <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                              class="star"
+                                              th:data-rating="${i}"
+                                              th:onclick="'rateItem(' + ${item.id} + ', ' + ${i} + ')'">
+                                            ☆
+                                        </span>
+                                    </div>
+                                </div>
+                                <div th:unless="${item.rating == 0}">
+                                    <!-- Показываем текущую оценку -->
+                                    <div class="current-rating">
+                                        <span th:each="i : ${#numbers.sequence(1, item.rating)}">⭐</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:unless="${item.user.id == currentUserId and item.paid}">
+                                <!-- Показываем текущую оценку, если это не пользователь или блюдо не оплачено -->
+                                <div th:if="${item.rating > 0}">
+                                    <span th:each="i : ${#numbers.sequence(1, item.rating)}">⭐</span>
+                                </div>
+                                <div th:unless="${item.rating > 0}">-</div>
+                            </div>
+                        </td>
                     </tr>
                     </tbody>
                 </table>
@@ -200,6 +251,58 @@
 
 <!-- Bootstrap JS (опционально) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function rateItem(userOrderId, rating) {
+        // Отправляем оценку на сервер
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/rate-item/' + userOrderId;
+
+        // Добавляем CSRF-токен
+        const csrfToken = document.querySelector('input[name="_csrf"]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_csrf';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        // Добавляем параметр rating
+        const ratingInput = document.createElement('input');
+        ratingInput.type = 'hidden';
+        ratingInput.name = 'rating';
+        ratingInput.value = rating;
+        form.appendChild(ratingInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // Добавляем обработчики для наведения
+    document.querySelectorAll('.rating-stars').forEach(container => {
+        const stars = container.querySelectorAll('.star');
+
+        stars.forEach(star => {
+            // При наведении
+            star.addEventListener('mouseover', function() {
+                const currentRating = parseInt(this.getAttribute('data-rating'));
+                stars.forEach(s => {
+                    const sRating = parseInt(s.getAttribute('data-rating'));
+                    if (sRating <= currentRating) {
+                        s.classList.add('hover');
+                    } else {
+                        s.classList.remove('hover');
+                    }
+                });
+            });
+
+            // При уходе курсора
+            star.addEventListener('mouseout', function() {
+                stars.forEach(s => s.classList.remove('hover'));
+            });
+        });
+    });
+</script>
+
 <footer th:replace="fragments/common :: common-footer"></footer>
 </body>
 </html>

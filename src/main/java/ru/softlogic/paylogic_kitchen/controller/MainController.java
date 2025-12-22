@@ -200,4 +200,20 @@ public class MainController {
         Long orderId = userOrder.getOrder().getId();
         return "redirect:/order/" + orderId;
     }
+
+    @PostMapping("/rate-item/{userOrderId}")
+    public String rateItem(@PathVariable Long userOrderId,
+                           @RequestParam Integer rating,
+                           Authentication auth) {
+        String username = auth.getName();
+        User user = (User) userService.loadUserByUsername(username);
+
+        kitchenService.updateRating(userOrderId, rating, user.getId());
+
+        // Найдём orderId, чтобы вернуться к заказу
+        UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
+        Long orderId = userOrder.getOrder().getId();
+
+        return "redirect:/order/" + orderId;
+    }
 }

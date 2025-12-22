@@ -1,5 +1,6 @@
 package ru.softlogic.paylogic_kitchen.repository;
 
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import ru.softlogic.paylogic_kitchen.entity.Order;
 import ru.softlogic.paylogic_kitchen.entity.UserOrder;
@@ -12,7 +13,6 @@ import java.util.List;
 public interface UserOrderRepository extends JpaRepository<UserOrder, Long> {
     List<UserOrder> getUserOrdersByOrder(Order order);
 
-    // Добавь этот метод:
     List<UserOrder> findByOrder_Id(Long orderId);
 
     @Query("SELECT uo FROM UserOrder uo JOIN FETCH uo.user WHERE uo.order.id = :orderId ORDER BY uo.id ASC")
@@ -33,4 +33,9 @@ public interface UserOrderRepository extends JpaRepository<UserOrder, Long> {
     // 4. Количество заказов пользователем за всё время
     @Query("SELECT uo.user, COUNT(uo) FROM UserOrder uo GROUP BY uo.user ORDER BY COUNT(uo) DESC")
     List<Object[]> findTopOrdersByUserAllTime();
+
+    @Modifying
+    @Query("UPDATE UserOrder uo SET uo.rating = :rating WHERE uo.id = :userOrderId")
+    void updateRating(@Param("userOrderId") Long userOrderId, @Param("rating") Integer rating);
+
 }

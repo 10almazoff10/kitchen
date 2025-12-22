@@ -31,6 +31,9 @@ public class UserOrder {
     @Column(name = "created_date", nullable = false)
     private LocalDateTime createdDate = LocalDateTime.now();
 
+    @Column(name = "rating", columnDefinition = "int default 0")
+    private Integer rating = 0;
+
     // constructors, getters, setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -52,6 +55,9 @@ public class UserOrder {
 
     public boolean isPaid() { return isPaid; }
     public void setPaid(boolean paid) { isPaid = paid; }
+
+    public Integer getRating() { return rating; }
+    public void setRating(Integer rating) { this.rating = rating; }
 
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }

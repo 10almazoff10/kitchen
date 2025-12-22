@@ -5,6 +5,8 @@ import ru.softlogic.paylogic_kitchen.entity.*;
 import ru.softlogic.paylogic_kitchen.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -140,5 +142,22 @@ public class KitchenService {
 
     public void saveRestaurant(Restaurant restaurant) {
         restaurantRepo.save(restaurant);
+    }
+
+    @Transactional
+    public void updateRating(Long userOrderId, Integer rating, Long userId) {
+        UserOrder userOrder = userOrderRepo.findById(userOrderId).orElseThrow(() -> new RuntimeException("UserOrder not found"));
+
+        // Проверяем, что пользователь может оценить только своё блюдо
+        if (!userOrder.getUser().getId().equals(userId)) {
+            throw new RuntimeException("You can only rate your own items");
+        }
+
+        // Проверяем, что оценка от 1 до 5
+        if (rating < 1 || rating > 5) {
+            throw new RuntimeException("Rating must be between 1 and 5");
+        }
+
+        userOrderRepo.updateRating(userOrderId, rating);
     }
 }
