@@ -6,6 +6,9 @@ import ru.softlogic.paylogic_kitchen.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 
 import java.math.BigDecimal;
@@ -27,10 +30,10 @@ public class KitchenService {
     public List<Order> getActiveOrders() {
         return orderRepo.findByIsClosedFalseOrderByIdDesc();
     }
-    public List<Order> getClosedOrders() {
-        return orderRepo.findByIsClosedTrueOrderByIdDesc();
-    }
 
+    public Page<Order> getClosedOrders(Pageable pageable) {
+        return orderRepo.findByIsClosedTrueOrderByIdDesc(pageable);
+    }
     public List<Order> getOrders(){ return orderRepo.findAll();}
 
     public Order createOrder(Restaurant restaurant, java.time.LocalDateTime deadline, User createdBy, String paymentData) {

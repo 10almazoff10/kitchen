@@ -53,31 +53,40 @@
             </div>
         </div>
     </div>
-
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-header">
             <h3 class="h5 mb-0">Закрытые заказы</h3>
         </div>
-
         <div class="card-body">
-            <ul class="list-unstyled">
-                <li th:each="order : ${closedOrders}" class="order-card">
-                    <a th:href="@{/order/{id}(id=${order.id})}" th:text="${order.createdBy.fullName + ' - ' + order.restaurant.name}" class="h5 d-block text-decoration-none"></a>
-                    <p class="text-muted mb-1">
-                        Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
-                    </p>
-                </li>
-            </ul>
-            <!-- Если закрытых заказов нет -->
-            <div th:if="${#lists.isEmpty(closedOrders)}" class="text-center text-muted">
-                Закрытых заказов нет.
+            <div th:if="${closedOrders.content.size() == 0}">
+                <em>Нет закрытых заказов.</em>
             </div>
+            <div th:each="order : ${closedOrders.content}">
+                <!-- Отображение заказа -->
+                <div class="order-item mb-3 p-2 border rounded">
+                    <a th:href="@{/order/{id}(id=${order.id})}" th:text="${order.createdBy.fullName + ' - ' + order.restaurant.name}" class="h5 d-block text-decoration-none"></a>
+                    <p>Дедлайн: <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span></p>
+                    <p>Для оплаты: <span th:text="${order.paymentData}"></span></p>
+                </div>
+            </div>
+
+            <!-- Пагинация для закрытых заказов -->
+            <nav th:if="${closedOrders.totalPages > 1}">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${closedOrders.number == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/(page=${closedOrders.number - 1}, size=${closedOrders.size})}">Предыдущая</a>
+                    </li>
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, closedOrders.totalPages - 1)}"
+                        th:classappend="${i == closedOrders.number} ? 'active'">
+                        <a class="page-link" th:href="@{/(page=${i}, size=${closedOrders.size})}" th:text="${i + 1}"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${closedOrders.number == closedOrders.totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/(page=${closedOrders.number + 1}, size=${closedOrders.size})}">Следующая</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
-</div>
-
-
-
 
 <!-- Bootstrap JS (опционально) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

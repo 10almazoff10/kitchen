@@ -1,5 +1,8 @@
 package ru.softlogic.paylogic_kitchen.controller;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Value;
 import ru.softlogic.paylogic_kitchen.entity.Order;
 import ru.softlogic.paylogic_kitchen.entity.Restaurant;
@@ -29,17 +32,21 @@ public class MainController {
     private String headerName;
 
     @GetMapping("/")
-    public String home(Authentication auth, Model model) {
+    public String home(Authentication auth,
+                       Model model,
+                       @RequestParam(defaultValue = "0") int page,
+                       @RequestParam(defaultValue = "5") int size) {
         if (auth == null || !auth.isAuthenticated()) {
             return "redirect:/login";
         }
 
         String username = auth.getName();
         User user = (User) kitchenService.loadUserByUsername(username);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("deadlineTime").descending());
 
         model.addAttribute("userName", user.getFullName());
         model.addAttribute("activeOrders", kitchenService.getActiveOrders());
-        model.addAttribute("closedOrders", kitchenService.getClosedOrders());
+        model.addAttribute("closedOrders", kitchenService.getClosedOrders(pageable));
         model.addAttribute("currentUserId", user.getId());
         model.addAttribute("appVersion", appVersion);
         model.addAttribute("title", "Главная");
