@@ -14,6 +14,9 @@ public class RatingController {
     @Value("${app.headerName}")
     private String headerName;
 
+    @Value("${app.version}")
+    private String appVersion;
+
     @Autowired
     private RatingService ratingService;
 
@@ -27,6 +30,7 @@ public class RatingController {
         model.addAttribute("topOrdersThisMonth", ratingService.getTopOrdersThisMonth());
         model.addAttribute("topSpentAllTime", ratingService.getTopSpentAllTime());
         model.addAttribute("topOrdersAllTime", ratingService.getTopOrdersAllTime());
+        model.addAttribute("appVersion", appVersion);
         model.addAttribute("title", "Рейтинг пользователей");
         model.addAttribute("headerName", headerName);
 
