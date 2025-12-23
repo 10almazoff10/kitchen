@@ -28,7 +28,19 @@ public class Order {
     @JoinColumn(name = "created_by_user_id")
     private User createdBy;
 
-    // constructors, getters, setters
+    @Column(name = "deadline_notified", columnDefinition = "boolean default false")
+    private boolean deadlineNotified = false;
+
+    @Column(name = "deadline_warning_sent", columnDefinition = "boolean default false")
+    private boolean deadlineWarningSent = false;
+
+    // getters и setters
+    public boolean isDeadlineNotified() { return deadlineNotified; }
+    public void setDeadlineNotified(boolean deadlineNotified) { this.deadlineNotified = deadlineNotified; }
+
+    public boolean isDeadlineWarningSent() { return deadlineWarningSent; }
+    public void setDeadlineWarningSent(boolean deadlineWarningSent) { this.deadlineWarningSent = deadlineWarningSent; }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

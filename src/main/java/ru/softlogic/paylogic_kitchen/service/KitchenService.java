@@ -84,6 +84,8 @@ public class KitchenService {
         Order order = orderRepo.findById(orderId).orElseThrow();
         order.setClosed(true);
         orderRepo.save(order);
+        telegramService.sendDeadlineNotification(order);
+
     }
 
     public List<UserOrder> getUsersItemsInOrder(Long orderId) {

@@ -25,6 +25,7 @@ public class MainController {
     @Autowired private KitchenService kitchenService;
     @Autowired private UserService userService;
 
+
     @Value("${app.version}")
     private String appVersion;
 

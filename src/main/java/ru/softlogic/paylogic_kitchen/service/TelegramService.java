@@ -2,6 +2,7 @@ package ru.softlogic.paylogic_kitchen.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -11,11 +12,20 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import ru.softlogic.paylogic_kitchen.entity.Order;
+import ru.softlogic.paylogic_kitchen.entity.UserOrder;
+import ru.softlogic.paylogic_kitchen.repository.UserOrderRepository;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class TelegramService {
 
     private static final Logger logger = LoggerFactory.getLogger(TelegramService.class);
+
+    @Autowired
+    private UserOrderRepository userOrderRepo;
 
     @Value("${telegram.bot.token}")
     private String botToken;
@@ -50,6 +60,41 @@ public class TelegramService {
             logger.info("Telegram API response: {}", response);
         } catch (Exception e) {
             logger.error("Failed to send Telegram message", e);
+        }
+    }
+
+    public void sendDeadlineWarning(Order order) {
+        String message = String.format(
+                "⚠️ <b>Внимание!</b>\n" +
+                        "Заказ в <a href=\"%s\">%s</a> будет закрыт через 5 минут!\n" +
+                        "Дедлайн: %s",
+                order.getRestaurant().getWebsiteUrl(),
+                order.getRestaurant().getName(),
+                order.getDeadlineTime().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
+        );
+        sendMessage(message);
+    }
+
+    public void sendDeadlineNotification(Order order) {
+        String message = String.format(
+                "⏰ <b>Заказ закрыт!</b>\n" +
+                        "Ресторан: <a href=\"%s\">%s</a>\n" +
+                        "Создатель: %s",
+                order.getRestaurant().getWebsiteUrl(),
+                order.getRestaurant().getName(),
+                order.getCreatedBy().getFullName()
+        );
+        // Отправляем список блюд
+        List<UserOrder> items = userOrderRepo.findByOrder_Id(order.getId());
+        if (!items.isEmpty()) {
+            StringBuilder itemMessage = new StringBuilder(message + "\n\n<b>Блюда:</b>\n");
+            for (UserOrder item : items) {
+                itemMessage.append("• ").append(item.getUser().getFullName())
+                        .append(": ").append(item.getItemDescription()).append("\n");
+            }
+            sendMessage(itemMessage.toString());
+        } else {
+            sendMessage(message);
         }
     }
 }
