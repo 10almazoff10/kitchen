@@ -165,7 +165,7 @@
                         </td>
 
                         <!-- Цена -->
-                        <td th:text="${item.price} + ' руб.'"></td>
+                        <td th:text="${#numbers.formatDecimal(item.price, 1, 'DEFAULT', 0, 'DEFAULT')} + ' ₽'" style="white-space: nowrap;"></td>
 
                         <!-- Статус добавления -->
                         <td>
