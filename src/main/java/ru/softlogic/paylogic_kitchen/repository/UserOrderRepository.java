@@ -22,16 +22,16 @@ public interface UserOrderRepository extends JpaRepository<UserOrder, Long> {
     @Query("SELECT uo.user, SUM(uo.price) FROM UserOrder uo WHERE uo.isPaid = true AND uo.createdDate >= :startOfMonth GROUP BY uo.user ORDER BY SUM(uo.price) DESC")
     List<Object[]> findTopSpentByUserInPeriod(@Param("startOfMonth") LocalDateTime startOfMonth);
 
-    // 2. Количество заказов пользователем за период
-    @Query("SELECT uo.user, COUNT(uo) FROM UserOrder uo WHERE uo.createdDate >= :startOfMonth GROUP BY uo.user ORDER BY COUNT(uo) DESC")
+    // 2. Количество заказов, в которых участвовал пользователь за период
+    @Query("SELECT uo.user, COUNT(DISTINCT uo.order) FROM UserOrder uo JOIN uo.user WHERE uo.createdDate >= :startOfMonth GROUP BY uo.user ORDER BY COUNT(DISTINCT uo.order) DESC")
     List<Object[]> findTopOrdersByUserInPeriod(@Param("startOfMonth") LocalDateTime startOfMonth);
 
     // 3. Сумма потраченных денег пользователем за всё время
     @Query("SELECT uo.user, SUM(uo.price) FROM UserOrder uo WHERE uo.isPaid = true GROUP BY uo.user ORDER BY SUM(uo.price) DESC")
     List<Object[]> findTopSpentByUserAllTime();
 
-    // 4. Количество заказов пользователем за всё время
-    @Query("SELECT uo.user, COUNT(uo) FROM UserOrder uo GROUP BY uo.user ORDER BY COUNT(uo) DESC")
+    // 4. Количество заказов, в которых участвовал пользователь за всё время
+    @Query("SELECT uo.user, COUNT(DISTINCT uo.order) FROM UserOrder uo JOIN uo.user GROUP BY uo.user ORDER BY COUNT(DISTINCT uo.order) DESC")
     List<Object[]> findTopOrdersByUserAllTime();
 
     @Modifying
