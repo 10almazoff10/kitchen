@@ -2,7 +2,7 @@
 
 
 
-[![Version](https://img.shields.io/badge/version-0.11.1-blue.svg)](https://github.com/10almazoff10/kitchen)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/10almazoff10/kitchen)
 
 
 **Kitchen** is a web application for **ordering food together** with features such as restaurant selection, adding dishes, payment marking, rating, and Telegram notifications.
@@ -79,7 +79,7 @@ spring:
 
 logging:
   level:
-    ru.softlogic.paylogic_kitchen: DEBUG
+    ru.prokin.kitchen: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
@@ -117,7 +117,7 @@ or build a JAR:
 
 ```bash
 ./mvnw clean package
-java -jar target/paylogic-kitchen.jar
+java -jar target/kitchen.jar
 ```
 
 ### 4. Telegram Bot Setup
@@ -145,7 +145,7 @@ java -jar target/paylogic-kitchen.jar
 src/
 ├── main/
 │   ├── java/
-│   │   └── ru/softlogic/paylogic_kitchen/
+│   │   └── ru/prokin/kitchen/
 │   │       ├── controller/
 │   │       ├── entity/
 │   │       ├── repository/

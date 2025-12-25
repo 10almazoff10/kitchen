@@ -1,6 +1,6 @@
-package ru.softlogic.paylogic_kitchen.repository;
+package ru.prokin.kitchen.repository;
 
-import ru.softlogic.paylogic_kitchen.entity.User;
+import ru.prokin.kitchen.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,14 +1,13 @@
-package ru.softlogic.paylogic_kitchen.service;
+package ru.prokin.kitchen.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.softlogic.paylogic_kitchen.entity.User;
-import ru.softlogic.paylogic_kitchen.repository.UserOrderRepository;
+import ru.prokin.kitchen.entity.User;
+import ru.prokin.kitchen.repository.UserOrderRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 

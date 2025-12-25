@@ -1,4 +1,4 @@
-package ru.softlogic.paylogic_kitchen.service;
+package ru.prokin.kitchen.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +12,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-import ru.softlogic.paylogic_kitchen.entity.Order;
-import ru.softlogic.paylogic_kitchen.entity.UserOrder;
-import ru.softlogic.paylogic_kitchen.repository.UserOrderRepository;
+import ru.prokin.kitchen.entity.Order;
+import ru.prokin.kitchen.entity.UserOrder;
+import ru.prokin.kitchen.repository.UserOrderRepository;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;

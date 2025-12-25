@@ -1,10 +1,10 @@
-package ru.softlogic.paylogic_kitchen;
+package ru.prokin.kitchen;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class PaylogicKitchenApplicationTests {
+class KitchenApplicationTests {
 
     @Test
     void contextLoads() {

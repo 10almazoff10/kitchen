@@ -1,8 +1,8 @@
-package ru.softlogic.paylogic_kitchen.repository;
+package ru.prokin.kitchen.repository;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import ru.softlogic.paylogic_kitchen.entity.Order;
+import ru.prokin.kitchen.entity.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

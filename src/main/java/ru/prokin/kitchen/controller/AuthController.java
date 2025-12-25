@@ -1,4 +1,4 @@
-package ru.softlogic.paylogic_kitchen.controller;
+package ru.prokin.kitchen.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -6,8 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.softlogic.paylogic_kitchen.exception.UserRegistrationException;
-import ru.softlogic.paylogic_kitchen.service.UserService;
+import ru.prokin.kitchen.exception.UserRegistrationException;
+import ru.prokin.kitchen.service.UserService;
 
 @Controller
 public class AuthController {

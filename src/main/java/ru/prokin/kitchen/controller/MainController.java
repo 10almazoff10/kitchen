@@ -1,20 +1,20 @@
-package ru.softlogic.paylogic_kitchen.controller;
+package ru.prokin.kitchen.controller;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Value;
-import ru.softlogic.paylogic_kitchen.entity.Order;
-import ru.softlogic.paylogic_kitchen.entity.Restaurant;
-import ru.softlogic.paylogic_kitchen.entity.User;
-import ru.softlogic.paylogic_kitchen.entity.UserOrder;
-import ru.softlogic.paylogic_kitchen.service.KitchenService;
+import ru.prokin.kitchen.entity.Order;
+import ru.prokin.kitchen.entity.Restaurant;
+import ru.prokin.kitchen.entity.User;
+import ru.prokin.kitchen.entity.UserOrder;
+import ru.prokin.kitchen.service.KitchenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import ru.softlogic.paylogic_kitchen.service.UserService;
+import ru.prokin.kitchen.service.UserService;
 
 import java.math.BigDecimal;
 import java.util.List;

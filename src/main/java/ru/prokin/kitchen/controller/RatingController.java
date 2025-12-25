@@ -1,4 +1,4 @@
-package ru.softlogic.paylogic_kitchen.controller;
+package ru.prokin.kitchen.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -6,7 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import ru.softlogic.paylogic_kitchen.service.RatingService;
+import ru.prokin.kitchen.service.RatingService;
 
 @Controller
 public class RatingController {

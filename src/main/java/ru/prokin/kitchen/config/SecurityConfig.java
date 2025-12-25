@@ -1,4 +1,4 @@
-package ru.softlogic.paylogic_kitchen.config;
+package ru.prokin.kitchen.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

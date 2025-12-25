@@ -1,12 +1,12 @@
-package ru.softlogic.paylogic_kitchen.service;
+package ru.prokin.kitchen.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import ru.softlogic.paylogic_kitchen.entity.Order;
-import ru.softlogic.paylogic_kitchen.repository.OrderRepository;
+import ru.prokin.kitchen.entity.Order;
+import ru.prokin.kitchen.repository.OrderRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

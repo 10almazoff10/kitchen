@@ -1,13 +1,12 @@
-package ru.softlogic.paylogic_kitchen.service;
+package ru.prokin.kitchen.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import ru.softlogic.paylogic_kitchen.entity.*;
-import ru.softlogic.paylogic_kitchen.repository.*;
+import ru.prokin.kitchen.entity.*;
+import ru.prokin.kitchen.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 

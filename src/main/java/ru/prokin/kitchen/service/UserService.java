@@ -1,8 +1,8 @@
-package ru.softlogic.paylogic_kitchen.service;
+package ru.prokin.kitchen.service;
 
-import ru.softlogic.paylogic_kitchen.entity.User;
-import ru.softlogic.paylogic_kitchen.exception.UserRegistrationException;
-import ru.softlogic.paylogic_kitchen.repository.UserRepository;
+import ru.prokin.kitchen.entity.User;
+import ru.prokin.kitchen.exception.UserRegistrationException;
+import ru.prokin.kitchen.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

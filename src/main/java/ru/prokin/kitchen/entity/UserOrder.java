@@ -1,4 +1,4 @@
-package ru.softlogic.paylogic_kitchen.entity;
+package ru.prokin.kitchen.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
