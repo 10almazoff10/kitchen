@@ -10,9 +10,9 @@
     </parent>
     <groupId>ru.prokin</groupId>
     <artifactId>kitchen</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <name>kitchen</name>
-    <description>Spring Boot project</description>
+    <description>Kitchen</description>
     <url/>
     <licenses>
         <license/>

@@ -108,7 +108,7 @@ public class KitchenService {
     }
 
     public BigDecimal getTotalAmountForOrder(Long orderId) {
-        List<UserOrder> userOrders = userOrderRepo.findByOrder_Id(orderId);
+        List<UserOrder> userOrders = userOrderRepo.findByOrder_IdOrderByIdAsc(orderId);
         return userOrders.stream()
                 .map(UserOrder::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

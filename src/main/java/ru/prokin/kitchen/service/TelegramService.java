@@ -85,7 +85,7 @@ public class TelegramService {
                 order.getCreatedBy().getFullName()
         );
         // Отправляем список блюд
-        List<UserOrder> items = userOrderRepo.findByOrder_Id(order.getId());
+        List<UserOrder> items = userOrderRepo.findByOrder_IdOrderByIdAsc(order.getId());
         if (!items.isEmpty()) {
             StringBuilder itemMessage = new StringBuilder(message + "\n\n<b>Блюда:</b>\n");
             for (UserOrder item : items) {
