@@ -82,7 +82,7 @@ public class TelegramService {
     public void sendDeadlineNotification(Order order) {
         String message = String.format(
                 "⏰ <b>Заказ №%d закрыт!</b>\n" +
-                        "<a href=\"%s/order/%d\">Ссылка на заказ</a>\n" +
+                        "🔗 <a href=\"%s/order/%d\">Перейти к заказу</a>\n" +
                         "Создатель: %s",
                 order.getId(),
                 kitchenBaseUrl,
