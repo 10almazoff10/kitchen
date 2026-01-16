@@ -33,6 +33,9 @@ public class TelegramService {
     @Value("${telegram.chat.id}")
     private String chatId;
 
+    @Value("${kitchen.base-url}")
+    private String kitchenBaseUrl;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     public void sendMessage(String message) {
@@ -66,10 +69,11 @@ public class TelegramService {
     public void sendDeadlineWarning(Order order) {
         String message = String.format(
                 "⚠️ <b>Внимание!</b>\n" +
-                        "Заказ в <a href=\"%s\">%s</a> будет закрыт через 5 минут!\n" +
+                        "<a href=\"%s/order/%d\">Заказ №%d</a> будет закрыт через 5 минут!\n" +
                         "Дедлайн: %s",
-                order.getRestaurant().getWebsiteUrl(),
-                order.getRestaurant().getName(),
+                kitchenBaseUrl,
+                order.getId(),
+                order.getId(),
                 order.getDeadlineTime().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
         );
         sendMessage(message);
@@ -77,11 +81,12 @@ public class TelegramService {
 
     public void sendDeadlineNotification(Order order) {
         String message = String.format(
-                "⏰ <b>Заказ закрыт!</b>\n" +
-                        "Ресторан: <a href=\"%s\">%s</a>\n" +
+                "⏰ <b>Заказ №%d закрыт!</b>\n" +
+                        "<a href=\"%s/order/%d\">Ссылка на заказ</a>\n" +
                         "Создатель: %s",
-                order.getRestaurant().getWebsiteUrl(),
-                order.getRestaurant().getName(),
+                order.getId(),
+                kitchenBaseUrl,
+                order.getId(),
                 order.getCreatedBy().getFullName()
         );
         // Отправляем список блюд
