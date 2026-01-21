@@ -2,7 +2,7 @@
 
 
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/10almazoff10/kitchen)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)](https://github.com/10almazoff10/kitchen)
 
 
 **Kitchen** is a web application for **ordering food together** with features such as restaurant selection, adding dishes, payment marking, rating, and Telegram notifications.
