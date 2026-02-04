@@ -18,6 +18,9 @@ public interface UserOrderRepository extends JpaRepository<UserOrder, Long> {
     @Query("SELECT uo FROM UserOrder uo JOIN FETCH uo.user WHERE uo.order.id = :orderId ORDER BY uo.id ASC")
     List<UserOrder> findWithUserByOrder_Id(@Param("orderId") Long orderId);
 
+    @Query("SELECT uo FROM UserOrder uo WHERE uo.order.id = :orderId AND uo.user.id = :userId")
+    List<UserOrder> findByOrder_IdAndUser_Id(@Param("orderId") Long orderId, @Param("userId") Long userId);
+
     // 1. Сумма потраченных денег пользователем за период
     @Query("SELECT uo.user, SUM(uo.price) FROM UserOrder uo WHERE uo.isPaid = true AND uo.createdDate >= :startOfMonth GROUP BY uo.user ORDER BY SUM(uo.price) DESC")
     List<Object[]> findTopSpentByUserInPeriod(@Param("startOfMonth") LocalDateTime startOfMonth);

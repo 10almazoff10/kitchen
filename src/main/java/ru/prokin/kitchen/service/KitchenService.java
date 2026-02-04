@@ -1,6 +1,7 @@
 package ru.prokin.kitchen.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import ru.prokin.kitchen.dto.UserOrderSummary;
 import ru.prokin.kitchen.entity.*;
 import ru.prokin.kitchen.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class KitchenService {
@@ -35,32 +37,33 @@ public class KitchenService {
     }
     public List<Order> getOrders(){ return orderRepo.findAll();}
 
-    public Order createOrder(Restaurant restaurant, java.time.LocalDateTime deadline, User createdBy, String paymentData) {
+    public void createOrder(Restaurant restaurant, java.time.LocalDateTime deadline, User createdBy, String paymentData, String comment) {
         Order order = new Order();
         order.setRestaurant(restaurant);
         order.setDeadlineTime(deadline);
         order.setCreatedBy(createdBy);
         order.setPaymentData(paymentData);
+        order.setComment(comment);
         Order savedOrder = orderRepo.save(order);
 
         // Отправляем сообщение в Telegram
         String message = String.format(
                 "🔔 <b>Новый заказ!</b>\n" +
+                        "🔗 <a href=\"%s/order/%d\">Перейти к заказу</a>\n" +
                         "👤 Создал: %s\n" +
                         "🍽 Ресторан: %s\n" +
                         "⏰ Дедлайн: %s\n" +
                         "💳 Для оплаты: %s\n" +
-                        "🔗 <a href=\"%s/order/%d\">Перейти к заказу</a>",
+                        "💬 Комментарий: %s",
+                baseUrl,
+                savedOrder.getId(),
                 createdBy.getFullName(),
                 restaurant.getName(),
                 deadline.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")),
                 paymentData,
-                baseUrl,
-                savedOrder.getId()
+                comment
         );
         telegramService.sendMessage(message);
-
-        return savedOrder;
     }
 
     public void addUserOrder(Long orderId, Long userId, String item, java.math.BigDecimal price) {
@@ -79,12 +82,58 @@ public class KitchenService {
         userOrderRepo.delete(userOrder);
     }
 
-    public void closeOrder(Long orderId) {
+    public void closeOrder(Long orderId, BigDecimal deliveryCost) {
         Order order = orderRepo.findById(orderId).orElseThrow();
+
+        // Распределяем стоимость доставки между пользователями
+        distributeDeliveryCost(orderId, deliveryCost);
+
         order.setClosed(true);
         orderRepo.save(order);
         telegramService.sendDeadlineNotification(order);
+    }
 
+    private void distributeDeliveryCost(Long orderId, BigDecimal deliveryCost) {
+        if (deliveryCost.compareTo(BigDecimal.ZERO) <= 0) {
+            // Если стоимость доставки не указана или равна 0, не распределяем
+            return;
+        }
+
+        // Получаем все заказы пользователей в этом заказе
+        List<UserOrder> userOrders = userOrderRepo.findByOrder_IdOrderByIdAsc(orderId);
+
+        if (userOrders.isEmpty()) {
+            // Если нет пользовательских заказов, нечего распределять
+            return;
+        }
+
+        // Находим уникальных пользователей
+        Map<Long, List<UserOrder>> ordersByUser = userOrders.stream()
+            .collect(Collectors.groupingBy(uo -> uo.getUser().getId()));
+
+        int uniqueUsersCount = ordersByUser.size();
+
+        if (uniqueUsersCount == 0) {
+            return;
+        }
+
+        // Вычисляем стоимость доставки на каждого пользователя
+        BigDecimal deliveryPerUser = deliveryCost.divide(new BigDecimal(uniqueUsersCount), java.math.RoundingMode.HALF_UP);
+
+        // Присваиваем стоимость доставки первому блюду каждого пользователя,
+        // остальным блюдам этого пользователя присваиваем 0
+        for (List<UserOrder> userOrderList : ordersByUser.values()) {
+            boolean isFirstItem = true;
+            for (UserOrder userOrder : userOrderList) {
+                if (isFirstItem) {
+                    userOrder.setDeliveryCost(deliveryPerUser);
+                    isFirstItem = false;
+                } else {
+                    userOrder.setDeliveryCost(BigDecimal.ZERO);
+                }
+                userOrderRepo.save(userOrder);
+            }
+        }
     }
 
     public List<UserOrder> getUsersItemsInOrder(Long orderId) {
@@ -109,9 +158,21 @@ public class KitchenService {
 
     public BigDecimal getTotalAmountForOrder(Long orderId) {
         List<UserOrder> userOrders = userOrderRepo.findByOrder_IdOrderByIdAsc(orderId);
-        return userOrders.stream()
+
+        // Подсчет общей стоимости блюд
+        BigDecimal totalItemsPrice = userOrders.stream()
                 .map(UserOrder::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Подсчет общей стоимости доставки (учитываем только по одному разу для каждого пользователя)
+        Map<Long, List<UserOrder>> ordersByUser = userOrders.stream()
+            .collect(Collectors.groupingBy(uo -> uo.getUser().getId()));
+
+        BigDecimal totalDeliveryCost = ordersByUser.values().stream()
+            .map(userOrderList -> userOrderList.get(0).getDeliveryCost()) // Берем доставку только из первого элемента каждого пользователя
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return totalItemsPrice.add(totalDeliveryCost);
     }
 
     public void updateUserOrder(Long userOrderId, String itemDescription, BigDecimal price) {
@@ -146,6 +207,51 @@ public class KitchenService {
 
     public void saveRestaurant(Restaurant restaurant) {
         restaurantRepo.save(restaurant);
+    }
+
+    public List<UserOrderSummary> getUserOrderSummariesByOrderId(Long orderId) {
+        List<UserOrder> orderItems = getUsersItemsInOrder(orderId);
+
+        Map<Long, List<UserOrder>> groupedByUser = orderItems.stream()
+            .collect(Collectors.groupingBy(item -> item.getUser().getId()));
+
+        return groupedByUser.values().stream().map(items -> {
+            UserOrder first = items.get(0);
+
+            // Берем стоимость доставки только первого элемента, так как она уже распределена
+            // между пользователями, а не между их блюдами
+            BigDecimal deliveryCost = items.get(0).getDeliveryCost();
+
+            boolean allPaid = items.stream().allMatch(UserOrder::isPaid);
+            boolean allAdded = items.stream().allMatch(UserOrder::isAddedToRestaurantOrder);
+
+            return new UserOrderSummary(
+                first.getUser().getId(),
+                first.getUser().getFullName(),
+                items,
+                deliveryCost,
+                allPaid,
+                allAdded
+            );
+        }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void markAllItemsPaidByUser(Long orderId, Long userId) {
+        List<UserOrder> userOrders = userOrderRepo.findByOrder_IdAndUser_Id(orderId, userId);
+        for (UserOrder userOrder : userOrders) {
+            userOrder.setPaid(true);
+            userOrderRepo.save(userOrder);
+        }
+    }
+
+    @Transactional
+    public void markAllItemsAddedByUser(Long orderId, Long userId) {
+        List<UserOrder> userOrders = userOrderRepo.findByOrder_IdAndUser_Id(orderId, userId);
+        for (UserOrder userOrder : userOrders) {
+            userOrder.setAddedToRestaurantOrder(true);
+            userOrderRepo.save(userOrder);
+        }
     }
 
     @Transactional

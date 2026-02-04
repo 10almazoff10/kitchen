@@ -34,6 +34,9 @@ public class Order {
     @Column(name = "deadline_warning_sent", columnDefinition = "boolean default false")
     private boolean deadlineWarningSent = false;
 
+    @Column(name = "comment")
+    private String comment;
+
     // getters и setters
     public boolean isDeadlineNotified() { return deadlineNotified; }
     public void setDeadlineNotified(boolean deadlineNotified) { this.deadlineNotified = deadlineNotified; }
@@ -65,4 +68,7 @@ public class Order {
 
     public String getPaymentData() { return paymentData; }
     public void setPaymentData(String paymentData) { this.paymentData = paymentData; }
+
+    public String getComment() { return comment; }
+    public void setComment(String comment) { this.comment = comment; }
 }

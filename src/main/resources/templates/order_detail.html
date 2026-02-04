@@ -70,6 +70,25 @@
         .current-rating {
             font-size: 16px;
         }
+
+        .rating-stars .star {
+            font-size: 18px;
+            color: #ffd49c;
+            cursor: pointer;
+            transition: color 0.2s;
+            margin-right: 2px;
+            white-space: nowrap;
+        }
+
+        .rating-stars .star:hover,
+        .rating-stars .star.hover {
+            color: #f39c12; /* Цвет при наведении */
+            font-weight: bold;
+        }
+
+        .rating-stars .star.selected {
+            color: #f1c40f; /* Цвет выбранной звезды */
+        }
     </style>
 </head>
 <body>
@@ -97,11 +116,44 @@
                 <span th:text="${totalAmount}"></span> руб.</p>
 
             <p><strong>Для оплаты:</strong> <span th:text="${order.paymentData}"></span></p>
+            <p><strong>Комментарий:</strong> <span th:text="${order.comment}"></span></p>
+
+            <h2 th:if="${!order.closed && !order.isAcceptingOrders}">Прием заказов завершен!</h2>
+            <h2 th:if="${order.closed && !order.isAcceptingOrders}">Заказ Закрыт!</h2>
+
+            <div class="mb-4" th:if="${!order.closed && order.isAcceptingOrders}">
+                <form method="post" th:action="@{/stop-accepting/{id}(id=${order.id})}"
+                      style="display:inline;"
+                      th:if="${order.createdBy.id == currentUserId}">
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">Остановить прием блюд</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Форма закрытия заказа -->
+        <div class="mb-2" th:if="${!order.closed && order.createdBy.id == currentUserId}">
+            <div class="card-body">
+                <h3 class="card-title">Закрыть заказ</h3>
+                <form method="post" th:action="@{/close-order/{id}(id=${order.id})}"
+                      style="display:inline;"
+                      th:if="${order.createdBy.id == currentUserId}">
+                    <div class="col-md-4">
+                        <label for="price" class="form-label">Стоимость доставки</label>
+                        <p class="text-muted fw-lighter fs-6">*эта стомость распределится между всеми участниками заказа</p>
+                        <input type="number" class="form-control" id="deliveryCost" name="deliveryCost" placeholder="0.00" step="0.01" min="0"/>
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Закрыть заказ</button>
+                    </div>
+                </form>
+
+            </div>
         </div>
     </div>
 
     <!-- Форма добавления блюда -->
-    <div class="card mb-4" th:if="!${order.closed}">
+    <div class="card mb-4" th:if="!${order.closed || !order.isAcceptingOrders}">
         <div class="card-body">
             <h3 class="card-title">Добавить блюдо</h3>
             <form th:action="@{/add-item/{id}(id=${order.id})}" method="post">
@@ -131,120 +183,141 @@
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
-                    <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Пользователь</th>
-                        <th scope="col">Блюдо</th>
-                        <th scope="col">Цена</th>
-                        <th scope="col">Добавлено в заказ</th>
-                        <th scope="col">Оплата</th>
-                        <th scope="col">Действия</th>
-                        <th scope="col">Оценка</th>
-                    </tr>
+                        <tr>
+                            <th scope="col">Пользователь</th>
+                            <th scope="col">Блюда</th>
+                            <th scope="col">Доставка</th>
+                            <th scope="col">Итого</th>
+                            <th scope="col">Добавлено</th>
+                            <th scope="col">Оплата</th>
+                            <th scope="col">Действия</th>
+                            <th scope="col">Оценка</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="item, iterStat : ${orderItems}">
-                        <td th:text="${iterStat.index + 1}"></td>
-                        <td th:text="${item.user?.fullName ?: 'Аноним'}"></td>
+                        <tr th:each="summary : ${userSummaries}">
+                            <!-- Пользователь -->
+                            <td th:text="${summary.fullName ?: 'Аноним'}"></td>
 
-                        <!-- Ячейка с блюдом -->
-                        <td style="min-width: 150px;">
-                            <div th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
-                                <span th:text="${item.itemDescription}"></span>
-                            </div>
-                            <div th:if="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
-                                <form th:action="@{/edit-item/{id}(id=${item.id})}" method="post" class="d-flex flex-column">
-                                    <input type="text" name="item" th:value="${item.itemDescription}" class="form-control mb-1" required />
-                                    <input type="number" name="price" th:value="${item.price}" step="0.01" class="form-control mb-1" required />
-                                    <div class="d-flex gap-1">
-                                        <button type="submit" class="btn btn-sm btn-success flex-fill">Сохранить</button>
-                                        <a th:href="@{/order/{id}(id=${order.id})}" class="btn btn-sm btn-secondary flex-fill">Отмена</a>
-                                    </div>
+                            <!-- Список блюд -->
+                            <td>
+                                <ul class="mb-0" style="padding-left: 1rem;">
+                                    <li th:each="item : ${summary.items}">
+                                        <span th:text="${item.itemDescription} + ' (' + ${#numbers.formatDecimal(item.price, 1, 'DEFAULT', 0, 'DEFAULT')} + ' ₽)'"></span>
+
+                                        <!-- Форма редактирования для конкретного блюда -->
+                                        <div th:if="${param.editId != null && #strings.equals(param.editId, item.id.toString())}" class="mt-2">
+                                            <form th:action="@{/edit-item/{id}(id=${item.id})}" method="post" class="d-flex flex-column">
+                                                <input type="text" name="item" th:value="${item.itemDescription}" class="form-control mb-1" required />
+                                                <input type="number" name="price" th:value="${item.price}" step="0.01" class="form-control mb-1" required />
+                                                <div class="d-flex gap-1">
+                                                    <button type="submit" class="btn btn-sm btn-success flex-fill">Сохранить</button>
+                                                    <a th:href="@{/order/{id}(id=${order.id})}" class="btn btn-sm btn-secondary flex-fill">Отмена</a>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </td>
+
+                            <!-- Доставка -->
+                            <td th:text="${#numbers.formatDecimal(summary.deliveryCost, 1, 'DEFAULT', 0, 'DEFAULT')} + ' ₽'"
+                                style="white-space: nowrap;"></td>
+
+                            <!-- Итого -->
+                            <td th:text="${#numbers.formatDecimal(#aggregates.sum(summary.items.![price]).add(summary.deliveryCost), 1, 'DEFAULT', 0, 'DEFAULT')} + ' ₽'"
+                                style="white-space: nowrap; font-weight: bold;"></td>
+
+                            <!-- Статус добавления -->
+                            <td>
+                                <span th:if="${summary.allAddedToRestaurantOrder}" class="badge bg-success">Добавлено</span>
+                                <form th:unless="${summary.allAddedToRestaurantOrder}"
+                                      th:if="${order.createdBy.id == currentUserId}"
+                                      method="post"
+                                      th:action=" @{/mark-added-user/{userId}(userId=${summary.userId})}"
+                                      th:with="orderId=${order.id}"
+                                      style="display:inline;">
+                                    <input type="hidden" name="orderId" th:value="${orderId}" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Добавлено</button>
                                 </form>
-                            </div>
-                        </td>
+                            </td>
 
-                        <!-- Цена -->
-                        <td th:text="${#numbers.formatDecimal(item.price, 1, 'DEFAULT', 0, 'DEFAULT')} + ' ₽'" style="white-space: nowrap;"></td>
-
-                        <!-- Статус добавления -->
-                        <td>
-                            <span th:if="${item.addedToRestaurantOrder}" class="badge bg-success">Добавлено</span>
-                            <form th:unless="${item.addedToRestaurantOrder}"
-                                  th:if="${order.createdBy.id == currentUserId}"
-                                method="post"
-                                th:action="@{/mark-added/{id}(id=${item.id})}"
-                                style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-outline-success">Отметить</button>
-                            </form>
-                        </td>
-
-                        <!-- Статус оплаты -->
-                        <td>
-                            <span th:if="${item.paid}" class="badge bg-primary">Оплачено</span>
-                            <form th:unless="${item.paid}" method="post" th:action="@{/mark-paid/{id}(id=${item.id})}" style="display:inline;">
-                                <button type="submit" class="btn btn-sm btn-outline-primary">Оплатил</button>
-                            </form>
-                        </td>
-
-                        <!-- Кнопки редактирования и удаления -->
-                        <td>
-                            <div class="d-flex gap-1" th:if="!${order.isClosed}">
-                                <form method="get" style="display:inline;" th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
-                                    <input type="hidden" name="editId" th:value="${item.id}" />
-                                    <button type="submit" class="btn btn-sm btn-outline-warning" style="width: 32px; height: 32px; padding: 0;">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                            <!-- Статус оплаты -->
+                            <td>
+                                <span th:if="${summary.allPaid}" class="badge bg-primary">Оплачено</span>
+                                <form th:unless="${summary.allPaid}"
+                                      method="post"
+                                      th:action=" @{/mark-paid-user/{userId}(userId=${summary.userId})}"
+                                      th:with="orderId=${order.id}"
+                                      style="display:inline;">
+                                    <input type="hidden" name="orderId" th:value="${orderId}" />
+                                    <button type="submit"  class="btn btn-sm btn-outline-primary">Оплатил</button>
                                 </form>
-                                <form method="post" style="display:inline;" th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}">
-                                    <input type="hidden" name="_method" value="post" />
-                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                    <button type="submit" th:formaction="@{/delete-item/{id}(id=${item.id})}"
-                                            class="btn btn-sm btn-outline-danger"
-                                            style="width: 32px; height: 32px; padding: 0;"
-                                            onclick="return confirm('Удалить эту позицию?');">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                        <!-- Оценка блюда -->
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <td>
-                            <div th:if="${item.user.id == currentUserId and item.paid}">
-                                <div th:if="${item.rating == 0}">
-                                    <!-- Форма для оценки через звёздочки -->
-                                    <div class="rating-stars" th:id="'rating-' + ${item.id}">
-                                        <span th:each="i : ${#numbers.sequence(1, 5)}"
-                                              class="star"
-                                              th:data-rating="${i}"
-                                              th:onclick="'rateItem(' + ${item.id} + ', ' + ${i} + ')'">
-                                            ☆
+                            </td>
+
+                            <!-- Действия (редактирование и удаление) -->
+                            <td>
+                                <div class="d-flex flex-column gap-2" th:if="!${order.closed}">
+                                    <!-- Каждое блюдо имеет свои кнопки -->
+                                    <div th:each="item : ${summary.items}" class="d-flex gap-1">
+                                        <form method="get" style="display:inline;"
+                                              th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}"
+                                              th:if="${!item.addedToRestaurantOrder}">
+                                            <input type="hidden" name="editId" th:value="${item.id}" />
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" style="width: 32px; height: 32px; padding: 0;">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" style="display:inline;"
+                                              th:unless="${param.editId != null && #strings.equals(param.editId, item.id.toString())}"
+                                              th:if="${!item.addedToRestaurantOrder}">
+                                            <input type="hidden" name="_method" value="post" />
+                                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                            <button type="submit" th:formaction="@{/delete-item/{id}(id=${item.id})}"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    style="width: 32px; height: 32px; padding: 0;"
+                                                    onclick="return confirm('Удалить эту позицию?');">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        <span th:if="${item.addedToRestaurantOrder}" class="text-muted">
+                                            <i class="fas fa-lock" title="Блюдо добавлено в заказ, редактирование невозможно"></i>
                                         </span>
                                     </div>
                                 </div>
-                                <div th:unless="${item.rating == 0}">
-                                    <!-- Показываем текущую оценку -->
-                                    <div class="current-rating">
-                                        <span th:each="i : ${#numbers.sequence(1, item.rating)}">⭐</span>
+                            </td>
+
+                            <!-- Оценки (показываем все) -->
+                            <td>
+                                <div th:each="item : ${summary.items}">
+                                    <div>
+                                        <small th:if="${item.user.id == currentUserId and item.paid}">
+                                            <!-- Форма для оценки/редактирования через звёздочки -->
+                                            <div class="rating-stars" th:id="'rating-' + ${item.id}">
+                                                <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                                      th:class="${i <= item.rating ? 'star selected' : 'star'}"
+                                                      th:data-rating="${i}"
+                                                      th:onclick="'rateItem(' + ${item.id} + ', ' + ${i} + ')'">
+                                                    <th:block th:if="${i <= item.rating}">★</th:block>
+                                                    <th:block th:unless="${i <= item.rating}">☆</th:block>
+                                                </span>
+                                            </div>
+                                        </small>
+                                        <small th:unless="${item.user.id == currentUserId and item.paid}">
+                                            <span th:if="${item.rating > 0}">
+                                                <span th:each="i : ${#numbers.sequence(1, item.rating)}">⭐</span>
+                                            </span>
+                                            <span th:unless="${item.rating > 0}">-</span>
+                                        </small>
                                     </div>
                                 </div>
-                            </div>
-                            <div th:unless="${item.user.id == currentUserId and item.paid}">
-                                <!-- Показываем текущую оценку, если это не пользователь или блюдо не оплачено -->
-                                <div th:if="${item.rating > 0}">
-                                    <span th:each="i : ${#numbers.sequence(1, item.rating)}">⭐</span>
-                                </div>
-                                <div th:unless="${item.rating > 0}">-</div>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Сообщение, если заказов нет -->
-            <div th:if="${#lists.isEmpty(orderItems)}" class="text-center text-muted">
+            <div th:if="${#lists.isEmpty(userSummaries)}" class="text-center text-muted">
                 <em>Пока никто ничего не заказал.</em>
             </div>
         </div>
@@ -287,7 +360,10 @@
             // При наведении
             star.addEventListener('mouseover', function() {
                 const currentRating = parseInt(this.getAttribute('data-rating'));
-                stars.forEach(s => {
+                const containerId = this.closest('.rating-stars').id;
+                const allStars = document.querySelectorAll(`#${containerId} .star`);
+
+                allStars.forEach(s => {
                     const sRating = parseInt(s.getAttribute('data-rating'));
                     if (sRating <= currentRating) {
                         s.classList.add('hover');
@@ -299,7 +375,27 @@
 
             // При уходе курсора
             star.addEventListener('mouseout', function() {
-                stars.forEach(s => s.classList.remove('hover'));
+                const containerId = this.closest('.rating-stars').id;
+                const allStars = document.querySelectorAll(`#${containerId} .star`);
+                allStars.forEach(s => s.classList.remove('hover'));
+            });
+
+            // При клике
+            star.addEventListener('click', function() {
+                const clickedRating = parseInt(this.getAttribute('data-rating'));
+                const containerId = this.closest('.rating-stars').id;
+                const allStars = document.querySelectorAll(`#${containerId} .star`);
+
+                allStars.forEach(s => {
+                    const sRating = parseInt(s.getAttribute('data-rating'));
+                    if (sRating <= clickedRating) {
+                        s.classList.add('selected');
+                        s.innerHTML = '★';
+                    } else {
+                        s.classList.remove('selected');
+                        s.innerHTML = '☆';
+                    }
+                });
             });
         });
     });

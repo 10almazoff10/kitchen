@@ -4,6 +4,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Value;
+import ru.prokin.kitchen.dto.UserOrderSummary;
 import ru.prokin.kitchen.entity.Order;
 import ru.prokin.kitchen.entity.Restaurant;
 import ru.prokin.kitchen.entity.User;
@@ -80,13 +81,14 @@ public class MainController {
     public String stopAccepting(@PathVariable Long id, Authentication auth) {
         // Проверка, что пользователь — создатель заказа (опционально)
         kitchenService.stopAcceptingOrders(id);
-        return "redirect:/";
+        return "redirect:/order/{id}";
     }
 
     @PostMapping("/create-order")
     public String createOrder(@RequestParam Long restaurantId,
                               @RequestParam String deadline,
                               @RequestParam String paymentData,
+                              @RequestParam String comment,
                               Authentication auth) {
         String username = auth.getName();
         User user = (User) userService.loadUserByUsername(username);
@@ -94,7 +96,7 @@ public class MainController {
         Restaurant restaurant = kitchenService.getRestaurantById(restaurantId);
         java.time.LocalDateTime deadlineTime = java.time.LocalDateTime.parse(deadline);
 
-        kitchenService.createOrder(restaurant, deadlineTime, user, paymentData);
+        kitchenService.createOrder(restaurant, deadlineTime, user, paymentData, comment);
 
         return "redirect:/";
     }
@@ -125,9 +127,12 @@ public class MainController {
     }
 
     @PostMapping("/close-order/{id}")
-    public String closeOrder(@PathVariable Long id, Authentication auth) {
+    public String closeOrder(@PathVariable Long id,
+                             @RequestParam(required = false, defaultValue = "0") String deliveryCost,
+                             Authentication auth) {
         // Проверка, что пользователь — создатель заказа (опционально)
-        kitchenService.closeOrder(id);
+        java.math.BigDecimal deliveryCostNum = new java.math.BigDecimal(deliveryCost);
+        kitchenService.closeOrder(id, deliveryCostNum);
         return "redirect:/";
     }
 
@@ -164,6 +169,7 @@ public class MainController {
 
         Order order = kitchenService.getOrderById(id);
         List<UserOrder> orderItems = kitchenService.getUsersItemsInOrder(id);
+        List<UserOrderSummary> userSummaries = kitchenService.getUserOrderSummariesByOrderId(id);
         BigDecimal totalAmount = kitchenService.getTotalAmountForOrder(id);
 
         String username = auth.getName();
@@ -171,6 +177,7 @@ public class MainController {
 
         model.addAttribute("order", order);
         model.addAttribute("orderItems", orderItems);
+        model.addAttribute("userSummaries", userSummaries);
         model.addAttribute("totalAmount", totalAmount);
         model.addAttribute("appVersion", appVersion);
         model.addAttribute("currentUserId", user.getId());
@@ -222,6 +229,18 @@ public class MainController {
         UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
         Long orderId = userOrder.getOrder().getId();
 
+        return "redirect:/order/" + orderId;
+    }
+
+    @PostMapping("/mark-paid-user/{userId}")
+    public String markAllPaid(@PathVariable Long userId, @RequestParam Long orderId) {
+        kitchenService.markAllItemsPaidByUser(orderId, userId);
+        return "redirect:/order/" + orderId;
+    }
+
+    @PostMapping("/mark-added-user/{userId}")
+    public String markAllAdded(@PathVariable Long userId, @RequestParam Long orderId) {
+        kitchenService.markAllItemsAddedByUser(orderId, userId);
         return "redirect:/order/" + orderId;
     }
 }

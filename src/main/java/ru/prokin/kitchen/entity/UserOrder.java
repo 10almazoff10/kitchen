@@ -22,6 +22,9 @@ public class UserOrder {
     private String itemDescription;
     private BigDecimal price;
 
+    @Column(precision = 19, scale = 2, nullable = false)
+    private BigDecimal deliveryCost = BigDecimal.ZERO;
+
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isAddedToRestaurantOrder = false;
 
@@ -49,6 +52,9 @@ public class UserOrder {
 
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+
+    public BigDecimal getDeliveryCost() { return deliveryCost; }
+    public void setDeliveryCost(BigDecimal deliveryCost) { this.deliveryCost = deliveryCost; }
 
     public boolean isAddedToRestaurantOrder() { return isAddedToRestaurantOrder; }
     public void setAddedToRestaurantOrder(boolean addedToRestaurantOrder) { isAddedToRestaurantOrder = addedToRestaurantOrder; }
