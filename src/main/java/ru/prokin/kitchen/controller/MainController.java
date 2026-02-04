@@ -4,6 +4,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import ru.prokin.kitchen.dto.UserOrderSummary;
 import ru.prokin.kitchen.entity.Order;
 import ru.prokin.kitchen.entity.Restaurant;
@@ -189,11 +190,9 @@ public class MainController {
     }
 
     @PostMapping("/mark-added/{userOrderId}")
-    public String markAdded(@PathVariable Long userOrderId, Authentication auth) {
+    @ResponseStatus(HttpStatus.OK)
+    public void markAdded(@PathVariable Long userOrderId, Authentication auth) {
         kitchenService.markUserOrderAsAdded(userOrderId);
-        UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
-        Long orderId = userOrder.getOrder().getId();
-        return "redirect:/order/" + orderId;
     }
 
     @PostMapping("/mark-paid/{userOrderId}")
@@ -217,19 +216,14 @@ public class MainController {
     }
 
     @PostMapping("/rate-item/{userOrderId}")
-    public String rateItem(@PathVariable Long userOrderId,
+    @ResponseStatus(HttpStatus.OK)
+    public void rateItem(@PathVariable Long userOrderId,
                            @RequestParam Integer rating,
                            Authentication auth) {
         String username = auth.getName();
         User user = (User) userService.loadUserByUsername(username);
 
         kitchenService.updateRating(userOrderId, rating, user.getId());
-
-        // Найдём orderId, чтобы вернуться к заказу
-        UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
-        Long orderId = userOrder.getOrder().getId();
-
-        return "redirect:/order/" + orderId;
     }
 
     @PostMapping("/mark-paid-user/{userId}")
