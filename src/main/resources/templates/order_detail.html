@@ -132,11 +132,35 @@
 
                     <!-- Список блюд -->
                     <td class="align-middle">
-                        <ul class="items-list">
-                            <li th:each="item : ${summary.items}">
+                        <div th:each="item : ${summary.items}" class="item-row">
+                            <!-- Режим просмотра -->
+                            <div th:if="${param.editId == null || !#strings.equals(param.editId, item.id.toString())}">
                                 <span th:text="${item.itemDescription} + ' (' + ${#numbers.formatDecimal(item.price, 1, 'DEFAULT', 0, 'DEFAULT')} + ' ₽)'"></span>
-                            </li>
-                        </ul>
+                            </div>
+                            <!-- Режим редактирования -->
+                            <div th:if="${param.editId != null and #strings.equals(param.editId, item.id.toString())}">
+                                <form method="post" th:action="@{/edit-item/{userOrderId}(userOrderId=${item.id})}" class="edit-item-form">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <div class="edit-form-row">
+                                        <input type="text" name="item" class="form-control-modern edit-input" 
+                                               th:value="${item.itemDescription}" required/>
+                                        <input type="number" name="price" class="form-control-modern edit-input-price" 
+                                               th:value="${item.price}" step="0.01" min="0" required/>
+                                        <button type="submit" class="btn-save-modern" title="Сохранить">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                        </button>
+                                        <a th:href="@{/order/{id}(id=${order.id})}" class="btn-cancel-modern" title="Отмена">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                                <line x1="6" y1="6" x2="18" y2="18"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </td>
 
                     <!-- Доставка -->
