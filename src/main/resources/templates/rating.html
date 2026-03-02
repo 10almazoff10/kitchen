@@ -2,105 +2,95 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/common :: common-head"></head>
 
-<body class="bg-light">
+<body>
 
 <!-- Header с логотипом -->
 <header th:replace="fragments/common :: common-header"></header>
 
 <div class="main-content">
-    <div class="container mt-4">
+    <h1 class="page-title mb-4">Рейтинг пользователей</h1>
 
-        <h1 class="mb-4">🏆 Рейтинг пользователей</h1>
-
-        <!-- Топ 3 по тратам за месяц -->
-        <div class="card rating-card">
-            <div class="card-header">
-                <h3 class="h5 mb-0">💰 Больше всего потратил за месяц</h3>
+    <!-- Топ 3 по тратам за месяц -->
+    <section class="rating-section mb-4">
+        <h2 class="section-title-with-icon">
+            <span class="icon-money">💰</span>
+            Больше всего потратил за месяц
+        </h2>
+        <div class="rating-list">
+            <div class="rating-item" th:each="item, iterStat : ${topSpentThisMonth}">
+                <div class="rating-item-content">
+                    <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
+                    <span class="user-name" th:text="${item.user.fullName}"></span>
+                    <span class="user-value" th:text="${item.value} + ' руб.'"></span>
+                </div>
             </div>
-            <div class="card-body">
-                <ol class="list-group">
-                    <li class="list-group-item" th:each="item, iterStat : ${topSpentThisMonth}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
-                                <strong th:text="${item.user.fullName}"></strong>
-                            </div>
-                            <div class="text-end">
-                                <span th:text="${item.value} + ' руб.'"></span>
-                            </div>
-                        </div>
-                    </li>
-                </ol>
+            <div th:if="${#lists.isEmpty(topSpentThisMonth)}" class="empty-state">
+                Нет данных за этот месяц
             </div>
         </div>
+    </section>
 
-        <!-- Топ 3 по заказам за месяц -->
-        <div class="card rating-card">
-            <div class="card-header">
-                <h3 class="h5 mb-0">🛒 Чаще всех заказывал за месяц</h3>
+    <!-- Топ 3 по заказам за месяц -->
+    <section class="rating-section mb-4">
+        <h2 class="section-title-with-icon">
+            <span class="icon-cart">🛒</span>
+            Чаще всех заказывал за месяц
+        </h2>
+        <div class="rating-list">
+            <div class="rating-item" th:each="item, iterStat : ${topOrdersThisMonth}">
+                <div class="rating-item-content">
+                    <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
+                    <span class="user-name" th:text="${item.user.fullName}"></span>
+                    <span class="user-value" th:text="${item.value} + ' заказов'"></span>
+                </div>
             </div>
-            <div class="card-body">
-                <ol class="list-group">
-                    <li class="list-group-item" th:each="item, iterStat : ${topOrdersThisMonth}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
-                                <strong th:text="${item.user.fullName}"></strong>
-                            </div>
-                            <div class="text-end">
-                                <span th:text="${item.value} + ' заказов'"></span>
-                            </div>
-                        </div>
-                    </li>
-                </ol>
+            <div th:if="${#lists.isEmpty(topOrdersThisMonth)}" class="empty-state">
+                Нет данных за этот месяц
             </div>
         </div>
+    </section>
 
-        <!-- Топ 3 по тратам за всё время -->
-        <div class="card rating-card">
-            <div class="card-header">
-                <h3 class="h5 mb-0">💸 Больше всего потратил за всё время</h3>
+    <!-- Топ 3 по тратам за всё время -->
+    <section class="rating-section mb-4">
+        <h2 class="section-title-with-icon">
+            <span class="icon-wallet">💸</span>
+            Больше всего потратил за всё время
+        </h2>
+        <div class="rating-list">
+            <div class="rating-item" th:each="item, iterStat : ${topSpentAllTime}">
+                <div class="rating-item-content">
+                    <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
+                    <span class="user-name" th:text="${item.user.fullName}"></span>
+                    <span class="user-value" th:text="${item.value} + ' руб.'"></span>
+                </div>
             </div>
-            <div class="card-body">
-                <ol class="list-group">
-                    <li class="list-group-item" th:each="item, iterStat : ${topSpentAllTime}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
-                                <strong th:text="${item.user.fullName}"></strong>
-                            </div>
-                            <div class="text-end">
-                                <span th:text="${item.value} + ' руб.'"></span>
-                            </div>
-                        </div>
-                    </li>
-                </ol>
+            <div th:if="${#lists.isEmpty(topSpentAllTime)}" class="empty-state">
+                Нет данных
             </div>
         </div>
+    </section>
 
-        <!-- Топ 3 по заказам за всё время -->
-        <div class="card rating-card">
-            <div class="card-header">
-                <h3 class="h5 mb-0">🛍️ Чаще всех заказывал за всё время</h3>
+    <!-- Топ 3 по заказам за всё время -->
+    <section class="rating-section">
+        <h2 class="section-title-with-icon">
+            <span class="icon-bag">🛍️</span>
+            Чаще всех заказывал за всё время
+        </h2>
+        <div class="rating-list">
+            <div class="rating-item" th:each="item, iterStat : ${topOrdersAllTime}">
+                <div class="rating-item-content">
+                    <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
+                    <span class="user-name" th:text="${item.user.fullName}"></span>
+                    <span class="user-value" th:text="${item.value} + ' заказов'"></span>
+                </div>
             </div>
-            <div class="card-body">
-                <ol class="list-group">
-                    <li class="list-group-item" th:each="item, iterStat : ${topOrdersAllTime}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="position-badge" th:classappend="'position-' + (${iterStat.index + 1})" th:text="${iterStat.index + 1}"></span>
-                                <strong th:text="${item.user.fullName}"></strong>
-                            </div>
-                            <div class="text-end">
-                                <span th:text="${item.value} + ' заказов'"></span>
-                            </div>
-                        </div>
-                    </li>
-                </ol>
+            <div th:if="${#lists.isEmpty(topOrdersAllTime)}" class="empty-state">
+                Нет данных
             </div>
         </div>
-    </div>
+    </section>
 </div>
+
 <footer th:replace="fragments/common :: common-footer"></footer>
 
 </body>

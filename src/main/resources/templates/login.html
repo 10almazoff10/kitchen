@@ -1,91 +1,42 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Вход в систему</title>
-    <link th:href="@{/css/common.css}" rel="stylesheet"></link>
-    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<head th:replace="fragments/common :: common-head"></head>
 
-    <link rel="icon" type="image/png" href="/logo/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/logo/favicon.svg" />
-    <link rel="shortcut icon" href="/logo/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/logo/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="Kitchen" />
-    <link rel="manifest" href="/logo/site.webmanifest" />
+<body>
 
-    <style>
-        html,
-        body {
-            height: 100%;
-        }
+<!-- Header с логотипом -->
+<header th:replace="fragments/common :: common-header"></header>
 
-        body {
-            display: flex;
-            align-items: center;
-            padding-top: 40px;
-            padding-bottom: 40px;
-            background-color: #f5f5f5;
-        }
+<div class="auth-container">
+    <main class="auth-form">
+        <h1 class="auth-title">Вход в систему</h1>
+        <p class="auth-subtitle">Введите логин и пароль</p>
+        
+        <form method="post" th:action="@{/login}" class="modern-form">
+            <!-- CSRF Token -->
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-        .form-signin {
-            width: 100%;
-            max-width: 400px;
-            padding: 30px;
-            margin: auto;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-
-        .form-signin .form-floating:focus-within {
-            z-index: 2;
-        }
-
-        .form-signin input[type="text"] {
-            margin-bottom: -1px;
-            border-bottom-right-radius: 0;
-            border-bottom-left-radius: 0;
-        }
-
-        .form-signin input[type="password"] {
-            margin-bottom: 10px;
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-        }
-
-        .btn {
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body class="text-center">
-
-<main class="form-signin">
-    <form method="post" th:action="@{/login}">
-        <!-- CSRF Token -->
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-        <div class="card-title text-center mb-4">
-            <h2 class="h3 mb-3 fw-normal">Авторизация</h2>
-        </div>
-
-        <div class="card-body p-0">
-            <div class="form-floating mb-3">
-                <input type="text" id="username" name="username" class="form-control" placeholder="Логин" required>
-                <label for="username">Логин</label>
+            <div class="form-group">
+                <label for="username" class="form-label">Логин</label>
+                <input type="text" id="username" name="username" class="form-control-modern" 
+                       placeholder="Ваш логин" required autofocus>
             </div>
 
-            <div class="form-floating mb-3">
-                <input type="password" id="password" name="password" class="form-control" placeholder="Пароль" required>
-                <label for="password">Пароль</label>
+            <div class="form-group">
+                <label for="password" class="form-label">Пароль</label>
+                <input type="password" id="password" name="password" class="form-control-modern" 
+                       placeholder="••••••••" required>
             </div>
-        </div>
 
-        <button class="w-100 btn btn-lg btn-primary" type="submit">Войти</button>
+            <div class="form-actions">
+                <button class="btn-primary-modern w-100" type="submit">Войти</button>
+                <a th:href="@{/register}" class="btn-secondary-modern w-100">Нет аккаунта? Зарегистрироваться</a>
+            </div>
+        </form>
+    </main>
+</div>
 
-        <a th:href="@{/register}" class="w-100 btn btn-lg btn-outline-secondary">Нет аккаунта? Зарегистрироваться</a>
-    </form>
-</main>
+<footer th:replace="fragments/common :: common-footer"></footer>
+
 </body>
 </html>
