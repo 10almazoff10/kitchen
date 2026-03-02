@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- ============================================
+     HEADER
+     Настраивается централизованно
+     ============================================ -->
+<header th:fragment="header" class="header-logo">
+    <div class="header-container">
+        <!-- Левая часть: логотип + название -->
+        <div class="header-left">
+            <a href="/" class="header-logo-link">
+                <img src="/img/logo_kitchen.png"
+                     alt="Kitchen"
+                     class="header-logo-img"
+                     th:src="@{/img/logo_kitchen.png}" />
+            </a>
+            <a href="/" class="header-site-name" th:text="${headerName ?: 'Kitchen'}"></a>
+        </div>
+
+        <!-- Правая часть: навигация -->
+        <nav class="header-nav">
+            <a th:href="@{/rating}" class="header-nav-item btn-rating">
+                <span class="header-nav-icon">🏆</span>
+                <span class="header-nav-text">Рейтинг</span>
+            </a>
+        </nav>
+    </div>
+</header>
+
+</body>
+</html>
