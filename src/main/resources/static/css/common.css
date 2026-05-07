@@ -60,6 +60,7 @@ body {
     font-weight: 500;
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
 }
 
 .btn-primary-modern:hover {
@@ -1028,8 +1029,8 @@ body {
 .badge-paid {
     display: inline-block;
     padding: 6px 12px;
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: #d1fae5;
+    color: #065f46;
     border-radius: 6px;
     font-size: 13px;
     font-weight: 500;

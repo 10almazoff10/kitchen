@@ -10,7 +10,7 @@
     </parent>
     <groupId>ru.prokin</groupId>
     <artifactId>kitchen</artifactId>
-    <version>1.5.0</version>
+    <version>latest</version>
     <name>kitchen</name>
     <description>Kitchen</description>
     <url/>
