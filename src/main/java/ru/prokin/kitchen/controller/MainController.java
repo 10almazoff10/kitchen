@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import ru.prokin.kitchen.service.RatingService;
 import ru.prokin.kitchen.service.UserService;
 
 import java.math.BigDecimal;
@@ -27,6 +28,8 @@ public class MainController {
     @Autowired private KitchenService kitchenService;
     @Autowired private UserService userService;
 
+    @Autowired
+    private RatingService ratingService;
 
     @Value("${app.version}")
     private String appVersion;
@@ -51,6 +54,7 @@ public class MainController {
         model.addAttribute("activeOrders", kitchenService.getActiveOrders());
         model.addAttribute("closedOrders", kitchenService.getClosedOrders(pageable));
         model.addAttribute("currentUserId", user.getId());
+        model.addAttribute("statistic", ratingService.getUserStatistic(user));
         model.addAttribute("appVersion", appVersion);
         model.addAttribute("title", "Главная");
         model.addAttribute("headerName", headerName);

@@ -18,6 +18,49 @@
         </p>
     </section>
 
+    <!-- Блок личной статистики пользователя -->
+    <section class="statistics-section mb-5" th:if="${statistic != null}">
+        <div class="row g-3">
+            <!-- За этот месяц -->
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted small text-uppercase fw-bold mb-3">В этом месяце</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fs-4 fw-bold text-primary" th:text="${#numbers.formatDecimal(statistic.totalSpentThisMonth, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'">0.00 ₽</div>
+                                <div class="small text-muted">Потрачено</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-bold text-dark" th:text="${statistic.totalOrdersThisMonth}">0</div>
+                                <div class="small text-muted">Заказов</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- За всё время -->
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted small text-uppercase fw-bold mb-3">За всё время</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fs-4 fw-bold text-success" th:text="${#numbers.formatDecimal(statistic.totalSpentAllTime, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'">0.00 ₽</div>
+                                <div class="small text-muted">Потрачено</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-bold text-dark" th:text="${statistic.totalOrdersAllTime}">0</div>
+                                <div class="small text-muted">Заказов</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
     <!-- Кнопка создания заказа -->
     <div class="action-section mb-5">
         <a th:href="@{/create-order}" class="btn-primary-modern">

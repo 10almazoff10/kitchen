@@ -64,4 +64,40 @@ public class RatingService {
         public User getUser() { return user; }
         public Object getValue() { return value; }
     }
+
+    // Метод получения личной статистики пользователя
+    public UserStatistic getUserStatistic(User user) {
+        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+
+        BigDecimal spentThisMonth = userOrderRepo.findSpentByUserInPeriod(user, startOfMonth);
+        long ordersThisMonth = userOrderRepo.countOrdersByUserInPeriod(user, startOfMonth);
+
+        BigDecimal spentAllTime = userOrderRepo.findSpentByUserAllTime(user);
+        long ordersAllTime = userOrderRepo.countOrdersByUserAllTime(user);
+
+        return new UserStatistic(spentThisMonth, ordersThisMonth, spentAllTime, ordersAllTime);
+    }
+
+    // Вспомогательный класс-контейнер для личной статистики
+    public static class UserStatistic {
+        private final BigDecimal totalSpentThisMonth;
+        private final long totalOrdersThisMonth;
+        private final BigDecimal totalSpentAllTime;
+        private final long totalOrdersAllTime;
+
+        public UserStatistic(BigDecimal totalSpentThisMonth, long totalOrdersThisMonth,
+                             BigDecimal totalSpentAllTime, long totalOrdersAllTime) {
+            this.totalSpentThisMonth = totalSpentThisMonth != null ? totalSpentThisMonth : BigDecimal.ZERO;
+            this.totalOrdersThisMonth = totalOrdersThisMonth;
+            this.totalSpentAllTime = totalSpentAllTime != null ? totalSpentAllTime : BigDecimal.ZERO;
+            this.totalOrdersAllTime = totalOrdersAllTime;
+        }
+
+        public BigDecimal getTotalSpentThisMonth() { return totalSpentThisMonth; }
+        public long getTotalOrdersThisMonth() { return totalOrdersThisMonth; }
+        public BigDecimal getTotalSpentAllTime() { return totalSpentAllTime; }
+        public long getTotalOrdersAllTime() { return totalOrdersAllTime; }
+    }
+
+
 }

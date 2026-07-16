@@ -4,9 +4,11 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import ru.prokin.kitchen.entity.Order;
 import ru.prokin.kitchen.entity.UserOrder;
+import ru.prokin.kitchen.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,5 +42,21 @@ public interface UserOrderRepository extends JpaRepository<UserOrder, Long> {
     @Modifying
     @Query("UPDATE UserOrder uo SET uo.rating = :rating WHERE uo.id = :userOrderId")
     void updateRating(@Param("userOrderId") Long userOrderId, @Param("rating") Integer rating);
+
+    // Статистика конкретного пользователя за период (деньги)
+    @Query("SELECT SUM(uo.price) FROM UserOrder uo WHERE uo.user = :user AND uo.isPaid = true AND uo.createdDate >= :startDate")
+    BigDecimal findSpentByUserInPeriod(@Param("user") User user, @Param("startDate") LocalDateTime startDate);
+
+    // Статистика конкретного пользователя за период (уникальные заказы)
+    @Query("SELECT COUNT(DISTINCT uo.order) FROM UserOrder uo WHERE uo.user = :user AND uo.createdDate >= :startDate")
+    long countOrdersByUserInPeriod(@Param("user") User user, @Param("startDate") LocalDateTime startDate);
+
+    // Статистика конкретного пользователя за все время (деньги)
+    @Query("SELECT SUM(uo.price) FROM UserOrder uo WHERE uo.user = :user AND uo.isPaid = true")
+    BigDecimal findSpentByUserAllTime(@Param("user") User user);
+
+    // Статистика конкретного пользователя за все время (уникальные заказы)
+    @Query("SELECT COUNT(DISTINCT uo.order) FROM UserOrder uo WHERE uo.user = :user")
+    long countOrdersByUserAllTime(@Param("user") User user);
 
 }
