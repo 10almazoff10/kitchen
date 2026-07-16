@@ -59,4 +59,10 @@ public interface UserOrderRepository extends JpaRepository<UserOrder, Long> {
     @Query("SELECT COUNT(DISTINCT uo.order) FROM UserOrder uo WHERE uo.user = :user")
     long countOrdersByUserAllTime(@Param("user") User user);
 
+    long countByUserAndIsPaidFalse(User user);
+
+    // Найти все неоплаченные позиции конкретного пользователя
+    List<UserOrder> findByUserAndIsPaidFalseOrderByIdDesc(User user);
+
+
 }

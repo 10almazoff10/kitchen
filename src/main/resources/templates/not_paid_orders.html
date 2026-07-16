@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/common :: common-head"></head>
+
+<body>
+
+<!-- Header с логотипом -->
+<header th:replace="fragments/common :: common-header"></header>
+
+<div class="main-content">
+    <h1 class="page-title mb-4">Неоплаченные заказы</h1>
+
+    <!-- Блок общей сводки (Итого) -->
+    <div th:if="${not #lists.isEmpty(notPaidOrders)}" class="card mb-4 border-0 shadow-sm bg-light">
+        <div class="card-body py-3 d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-muted small text-uppercase fw-bold d-block">Общая сумма долга</span>
+                <span class="fs-3 fw-bold text-danger" th:text="${totalDebt} + ' руб.'">0 руб.</span>
+            </div>
+            <div class="text-end">
+                <span class="text-muted small text-uppercase fw-bold d-block">Позиций ожидает оплаты</span>
+                <span class="fs-4 fw-bold text-dark" th:text="${notPaidOrders.size()} + ' шт.'">0 шт.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список неоплаченных позиций -->
+    <section class="rating-section">
+        <h2 class="section-title-with-icon">
+            <span class="icon-money">🚨</span>
+            Детализация по заказам
+        </h2>
+
+        <div class="rating-list">
+            <!-- Итерируемся по списку долгов -->
+            <div class="rating-item py-3" th:each="item : ${notPaidOrders}">
+                <div class="rating-item-content d-flex justify-content-between align-items-center w-100">
+
+                    <!-- Левая часть: номер заказа, дата и описание -->
+                    <div class="d-flex flex-column">
+                        <a th:href="@{/order/{id}(id=${item.order.id})}" class="fw-bold text-decoration-none text-primary mb-1">
+                            Заказ №<span th:text="${item.order.id}">1</span>
+                        </a>
+                        <span class="user-name fw-normal text-dark" th:text="${item.itemDescription}">Название блюда</span>
+                        <small class="text-muted" th:text="${#temporals.format(item.createdDate, 'dd.MM.yyyy HH:mm')}">01.01.2026</small>
+                    </div>
+
+                    <!-- Правая часть: Цена + Доставка и общая сумма за позицию -->
+                    <div class="text-end">
+                        <div class="small text-muted mb-1">
+                            <span th:text="${item.price} + ' ₽'">0 ₽</span>
+                            <span th:if="${item.deliveryCost > 0}" th:text="'+ ' + ${item.deliveryCost} + ' ₽ дост.'"> + 0 ₽ дост.</span>
+                        </div>
+                        <span class="user-value text-danger fw-bold" th:text="${item.price + item.deliveryCost} + ' руб.'">0 руб.</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Состояние, если всё оплачено (хотя th:if на главной сюда не пустит, пускай будет для надежности) -->
+            <div th:if="${#lists.isEmpty(notPaidOrders)}" class="empty-state py-4 text-center">
+                <span class="fs-1 d-block mb-2">🎉</span>
+                У вас нет неоплаченных заказов. Всё отлично!
+            </div>
+        </div>
+    </section>
+
+    <!-- Текстовое напоминание для пользователя в стиле структуры приложения -->
+    <div th:if="${not #lists.isEmpty(notPaidOrders)}" class="mt-4 p-3 border-0 bg-light rounded shadow-sm small text-muted">
+        ℹ️ Пожалуйста, проверьте выполнение переводов по данным позициям и не забудьте отметить их как оплаченные внутри самих заказов.
+    </div>
+</div>
+
+<footer th:replace="fragments/common :: common-footer"></footer>
+
+</body>
+</html>

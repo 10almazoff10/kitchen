@@ -58,6 +58,7 @@ public class MainController {
         model.addAttribute("appVersion", appVersion);
         model.addAttribute("title", "Главная");
         model.addAttribute("headerName", headerName);
+        model.addAttribute("notPaidOrdersCount", kitchenService.getNotPaidOrdersCount(user));
 
         return "index";
     }
@@ -241,4 +242,33 @@ public class MainController {
         kitchenService.markAllItemsAddedByUser(orderId, userId);
         return "redirect:/order/" + orderId;
     }
+
+    @GetMapping("/not-paid-orders")
+    public String showNotPaidOrders(Model model, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String username = auth.getName();
+        User user = (User) kitchenService.loadUserByUsername(username);
+
+        // Получаем список неоплаченных позиций
+        List<UserOrder> notPaidOrders = kitchenService.getNotPaidOrders(user);
+
+        // Считаем общую сумму долга
+        BigDecimal totalDebt = notPaidOrders.stream()
+                .map(uo -> uo.getPrice().add(uo.getDeliveryCost()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        model.addAttribute("userName", user.getFullName());
+        model.addAttribute("currentUserId", user.getId());
+        model.addAttribute("notPaidOrders", notPaidOrders);
+        model.addAttribute("totalDebt", totalDebt);
+        model.addAttribute("appVersion", appVersion);
+        model.addAttribute("title", "Неоплаченные заказы");
+        model.addAttribute("headerName", headerName);
+
+        return "not_paid_orders"; // Имя файла шаблона шаблонизатора Thymeleaf
+    }
+
 }

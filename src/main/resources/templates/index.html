@@ -7,7 +7,7 @@
 <header th:replace="fragments/common :: common-header"></header>
 
 <!-- Основной контент -->
-<div class="main-content">
+<iv class="main-content">
     <!-- Приветствие -->
     <section class="hero-section mb-5">
         <h1 class="hero-title">
@@ -17,6 +17,33 @@
             Организуйте совместные заказы с коллегами — быстро и удобно.
         </p>
     </section>
+
+    <!-- Блок отобразится только если количество заказов не равно null и больше 0 -->
+    <section class="not-paid-orders-section mb-5" th:if="${notPaidOrdersCount > 0}">
+        <div class="card h-100 border-0 shadow-sm bg-light">
+            <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+
+                <!-- Блок с текстом -->
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-circle-fill text-danger me-2 fs-5"></i>
+                    <h5 class="card-title text-danger small text-uppercase fw-bold mb-0">
+                        У вас имеются неоплаченные заказы в количестве
+                        <span th:text="${notPaidOrdersCount}">x</span> шт.
+                    </h5>
+                </div>
+
+                <!-- Блок с кнопкой -->
+                <div class="action-section">
+                    <a th:href="@{/not-paid-orders}" class="btn-primary-modern text-nowrap">
+                        <span>Подробнее</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
 
     <!-- Блок личной статистики пользователя -->
     <section class="statistics-section mb-5" th:if="${statistic != null}">

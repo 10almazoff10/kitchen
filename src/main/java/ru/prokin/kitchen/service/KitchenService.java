@@ -24,6 +24,7 @@ public class KitchenService {
     @Autowired private UserService userService;
     @Autowired private RestaurantRepository restaurantRepo;
     @Autowired private TelegramService telegramService;
+    @Autowired private UserOrderRepository userOrderRepository;
 
     @Value("${kitchen.base-url}")
     private String baseUrl;
@@ -270,4 +271,19 @@ public class KitchenService {
 
         userOrderRepo.updateRating(userOrderId, rating);
     }
+
+    public long getNotPaidOrdersCount(User user) {
+        if (user == null) {
+            return 0;
+        }
+        return userOrderRepository.countByUserAndIsPaidFalse(user);
+    }
+
+    public List<UserOrder> getNotPaidOrders(User user) {
+        if (user == null) {
+            return java.util.Collections.emptyList();
+        }
+        return userOrderRepository.findByUserAndIsPaidFalseOrderByIdDesc(user);
+    }
+
 }
