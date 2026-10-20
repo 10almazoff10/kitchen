@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- ============================================
+     HEADER
+     Настраивается централизованно
+     ============================================ -->
+<header th:fragment="header" class="header-logo">
+    <div class="header-container">
+        <!-- Левая часть: логотип + название -->
+        <div class="header-left">
+            <a href="/" class="header-logo-link">
+                <img src="/img/logo_kitchen.png"
+                     alt="Kitchen"
+                     class="header-logo-img"
+                     th:src="@{/img/logo_kitchen.png}" />
+            </a>
+            <a href="/" class="header-site-name" th:text="${headerName ?: 'Kitchen'}"></a>
+        </div>
+
+        <!-- Правая часть: навигация -->
+        <nav class="header-nav d-flex align-items-center gap-2">
+            <!-- Ссылка на неоплаченные заказы -->
+            <a th:if="${notPaidOrdersCount != null and notPaidOrdersCount > 0}"
+               th:href="@{/not-paid-orders}"
+               class="header-nav-item btn-debt text-decoration-none">
+        <span class="position-relative d-inline-block">
+            <span class="header-nav-icon">🚨</span>
+            <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                  style="font-size: 0.65rem; padding: 0.25em 0.4em;"
+                  th:text="${notPaidOrdersCount}">0</span>
+        </span>
+            </a>
+
+            <!-- Существующая ссылка на Рейтинг -->
+            <a th:href="@{/rating}" class="header-nav-item btn-rating">
+                <span class="header-nav-icon">🏆</span>
+                <span class="header-nav-text">Рейтинг</span>
+            </a>
+        </nav>
+
+    </div>
+</header>
+
+</body>
+</html>

@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: kitchen
+      POSTGRES_PASSWORD: kitchen_secret
+      POSTGRES_DB: kitchen
+      TZ: Asia/Barnaul
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kitchen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: golovoshot/kitchen:backend-2.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://db:5432/kitchen}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-kitchen}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-kitchen_secret}
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+      TZ: ${TZ:-Asia/Barnaul}
+      JWT_SECRET: ${JWT_SECRET:-kitchen-jwt-secret-key-that-is-at-least-256-bits-long-kitchen-app-2026}
+      # --- Active Directory / LDAP Settings ---
+      LDAP_ENABLED: ${LDAP_ENABLED:-false}
+      LDAP_URL: ${LDAP_URL:-ldap://localhost:389}
+      LDAP_DOMAIN: ${LDAP_DOMAIN:-example.com}
+      LDAP_BASE_DN: ${LDAP_BASE_DN:-DC=example,DC=com}
+      LDAP_USER_DN_PATTERN: ${LDAP_USER_DN_PATTERN:-}
+      # --- Telegram Notifications ---
+      TG_BOT_TOKEN: ${TG_BOT_TOKEN:-}
+      TB_BOT_CHAT_ID: ${TB_BOT_CHAT_ID:-}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: golovoshot/kitchen:frontend-2.0.0
+    environment:
+      TZ: ${TZ:-Asia/Barnaul}
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    restart: unless-stopped
+
+volumes:
+  db-data:

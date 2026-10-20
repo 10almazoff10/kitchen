@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/common :: common-head"></head>
+
+<body>
+
+<!-- Header с логотипом -->
+<header th:replace="fragments/common :: common-header"></header>
+
+<!-- Основная форма -->
+<div class="auth-container">
+    <main class="auth-form">
+        <h1 class="auth-title">Вход</h1>
+        <p class="auth-subtitle">Введите ваше имя для входа</p>
+        
+        <form method="post" action="/login" class="modern-form">
+            <div class="form-group">
+                <label for="nameInput" class="form-label">Имя</label>
+                <input type="text" id="nameInput" name="name" class="form-control-modern" 
+                       placeholder="Ваше имя" required autofocus>
+            </div>
+            
+            <button class="btn-primary-modern w-100" type="submit">Войти</button>
+        </form>
+        
+        <div class="auth-links">
+            <a th:href="@{/register}" class="auth-link">Нет аккаунта? Зарегистрироваться</a>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<footer th:replace="fragments/common :: common-footer"></footer>
+
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/common :: common-head"></head>
+
+<body>
+<!-- Header с логотипом -->
+<header th:replace="fragments/common :: common-header"></header>
+
+<!-- Основной контент -->
+<div class="main-content">
+    <!-- Приветствие -->
+    <section class="hero-section mb-5">
+        <h1 class="hero-title">
+            Привет, <span th:text="${userName}">User</span>!
+        </h1>
+        <p class="hero-subtitle">
+            Организуйте совместные заказы с коллегами — быстро и удобно.
+        </p>
+    </section>
+    <!-- Блок личной статистики пользователя -->
+    <section class="statistics-section mb-5" th:if="${statistic != null}">
+        <div class="row g-3">
+            <!-- За этот месяц -->
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted small text-uppercase fw-bold mb-3">В этом месяце</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fs-4 fw-bold text-primary" th:text="${#numbers.formatDecimal(statistic.totalSpentThisMonth, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'">0.00 ₽</div>
+                                <div class="small text-muted">Потрачено</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-bold text-dark" th:text="${statistic.totalOrdersThisMonth}">0</div>
+                                <div class="small text-muted">Заказов</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- За всё время -->
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted small text-uppercase fw-bold mb-3">За всё время</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fs-4 fw-bold text-success" th:text="${#numbers.formatDecimal(statistic.totalSpentAllTime, 1, 'WHITESPACE', 2, 'POINT')} + ' ₽'">0.00 ₽</div>
+                                <div class="small text-muted">Потрачено</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-4 fw-bold text-dark" th:text="${statistic.totalOrdersAllTime}">0</div>
+                                <div class="small text-muted">Заказов</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Кнопка создания заказа -->
+    <div class="action-section mb-5">
+        <a th:href="@{/create-order}" class="btn-primary-modern">
+            <span>Создать заказ</span>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Активные заказы -->
+    <section class="content-section mb-5">
+        <h2 class="section-title">Активные заказы</h2>
+        <div class="orders-list">
+            <div th:each="order : ${activeOrders}" class="order-item">
+                <a th:href="@{/order/{id}(id=${order.id})}" class="order-item-link">
+                    <div class="order-item-content">
+                        <div class="order-item-main">
+                            <span class="order-restaurant" th:text="${order.restaurant.name}"></span>
+                            <span class="order-creator" th:text="${order.createdBy.fullName}"></span>
+                        </div>
+                        <span class="order-deadline">
+                            <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
+                        </span>
+                    </div>
+                </a>
+                <form method="post" th:action="@{/close-order/{id}(id=${order.id})}"
+                      th:if="${order.createdBy.id == currentUserId}">
+                    <button type="submit" class="btn-close-order">Закрыть</button>
+                </form>
+            </div>
+            <div th:if="${#lists.isEmpty(activeOrders)}" class="empty-state">
+                Активных заказов нет
+            </div>
+        </div>
+    </section>
+
+    <!-- Закрытые заказы -->
+    <section class="content-section">
+        <h2 class="section-title">Закрытые заказы</h2>
+        <div class="orders-list">
+            <div th:if="${closedOrders.content.size() == 0}" class="empty-state">
+                Нет закрытых заказов
+            </div>
+            <div th:each="order : ${closedOrders.content}" class="order-item order-item-closed">
+                <a th:href="@{/order/{id}(id=${order.id})}" class="order-item-link">
+                    <div class="order-item-content">
+                        <div class="order-item-main">
+                            <span class="order-restaurant" th:text="${order.restaurant.name}"></span>
+                            <span class="order-creator" th:text="${order.createdBy.fullName}"></span>
+                        </div>
+                        <span class="order-deadline">
+                            <span th:text="${#temporals.format(order.deadlineTime, 'dd.MM.yyyy HH:mm')}"></span>
+                        </span>
+                    </div>
+                </a>
+                <div class="order-payment" th:text="${order.paymentData}"></div>
+            </div>
+        </div>
+
+        <!-- Пагинация -->
+        <nav th:if="${closedOrders.totalPages > 1}" class="pagination-modern">
+            <a th:if="${!closedOrders.first}" 
+               class="page-link" 
+               th:href="@{/(page=${closedOrders.number - 1}, size=${closedOrders.size})}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </a>
+            <div class="page-numbers">
+                <span class="page-current" th:text="${closedOrders.number + 1}"></span>
+                <span class="page-total" th:text="'из ' + ${closedOrders.totalPages}"></span>
+            </div>
+            <a th:if="${!closedOrders.last}" 
+               class="page-link" 
+               th:href="@{/(page=${closedOrders.number + 1}, size=${closedOrders.size})}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </a>
+        </nav>
+    </section>
+</div>
+
+<!-- Bootstrap JS (опционально) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<footer th:replace="fragments/common :: common-footer"></footer>
+
+</body>
+</html>

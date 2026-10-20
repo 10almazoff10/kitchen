@@ -1,0 +1,51 @@
+package ru.prokin.kitchen.service;
+
+import ru.prokin.kitchen.entity.User;
+import ru.prokin.kitchen.exception.UserRegistrationException;
+import ru.prokin.kitchen.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService implements UserDetailsService {
+
+    @Autowired
+    private UserRepository userRepo;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // будет внедрён автоматически
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepo.findByAnyUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    }
+
+    public User createUser(String username, String password, String fullName) {
+        if (userRepo.findByUsername(username).isPresent()) {
+            throw new UserRegistrationException("Пользователь с логином '" + username + "' уже существует.");
+        }
+
+        if (username.length() < 3 || username.length() > 30) {
+            throw new UserRegistrationException("Логин должен быть от 3 до 30 символов.");
+        }
+
+        if (password.length() < 6) {
+            throw new UserRegistrationException("Пароль должен быть не менее 6 символов.");
+        }
+
+        if (fullName.trim().isEmpty()) {
+            throw new UserRegistrationException("Полное имя не может быть пустым.");
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setFullName(fullName);
+        return userRepo.save(user);
+    }
+}

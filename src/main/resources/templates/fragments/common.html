@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Обёртки для обратной совместимости -->
+<header th:fragment="common-header" th:insert="~{fragments/header :: header}"></header>
+
+<footer th:fragment="common-footer" th:insert="~{fragments/footer :: footer}"></footer>
+
+<head th:fragment="common-head" th:insert="~{fragments/head :: head}"></head>
+
+</body>
+</html>

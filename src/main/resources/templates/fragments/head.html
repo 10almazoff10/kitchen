@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+    <meta charset="UTF-8">
+    
+    <!-- Title -->
+    <title th:if="${title}" th:text="${title}">Kitchen</title>
+    <title th:unless="${title}">Kitchen</title>
+    
+    <!-- Meta -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Система совместных заказов еды" th:if="${description}" th:content="${description}"/>
+    <meta name="description" content="Система совместных заказов еды" th:unless="${description}"/>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/logo/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/logo/favicon.svg" />
+    <link rel="shortcut icon" href="/logo/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Kitchen" />
+    <link rel="manifest" href="/logo/site.webmanifest" />
+    
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/common.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/bootstrap.min.css}" />
+</head>
+</html>
