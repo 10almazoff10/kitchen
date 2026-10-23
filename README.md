@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/10almazoff10/kitchen/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License" /></a>
   <a href="https://hub.docker.com/r/golovoshot/kitchen"><img src="https://img.shields.io/badge/docker%20hub-golovoshot%2Fkitchen-2496ED.svg?style=flat-square&logo=docker&logoColor=white" alt="Docker Hub" /></a>
-  <img src="https://img.shields.io/badge/version-2.1.0-emerald.svg?style=flat-square" alt="Version 2.1.0" />
+  <img src="https://img.shields.io/badge/version-2.2.0-emerald.svg?style=flat-square" alt="Version 2.2.0" />
   <img src="https://img.shields.io/badge/java-17%2B-ED8B00.svg?style=flat-square&logo=openjdk&logoColor=white" alt="Java 17+" />
   <img src="https://img.shields.io/badge/spring%20boot-3.5-6DB33F.svg?style=flat-square&logo=springboot&logoColor=white" alt="Spring Boot 3" />
   <img src="https://img.shields.io/badge/vue-3-4FC08D.svg?style=flat-square&logo=vuedotjs&logoColor=white" alt="Vue 3" />

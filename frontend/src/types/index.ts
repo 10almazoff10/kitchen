@@ -155,3 +155,22 @@ export interface DishSuggestionDto {
   itemDescription: string;
   price: number;
 }
+
+export interface PollOptionDto {
+  restaurantId: number;
+  restaurantName: string;
+  restaurantUrl?: string;
+  votesCount: number;
+  percentage: number;
+  voters: UserDto[];
+  isMyVote: boolean;
+}
+
+export interface DailyPollResponse {
+  id: number;
+  pollDate: string;
+  isActive: boolean;
+  totalVotes: number;
+  myVotedRestaurantId?: number | null;
+  options: PollOptionDto[];
+}

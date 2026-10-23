@@ -5,7 +5,7 @@ import { useAuthStore } from './stores/auth';
 import { useToastStore } from './stores/toast';
 import { useOrderStore } from './stores/orders';
 import { useThemeStore } from './stores/theme';
-import { LogOut, Store, Award, PlusCircle, CheckCircle, AlertCircle, Info, UtensilsCrossed, Sun, Moon } from 'lucide-vue-next';
+import { LogOut, Store, Award, PlusCircle, CheckCircle, AlertCircle, Info, UtensilsCrossed, Sun, Moon, Archive } from 'lucide-vue-next';
 import LinkAdModal from './components/LinkAdModal.vue';
 import ProfileModal from './components/ProfileModal.vue';
 import UserAvatar from './components/UserAvatar.vue';
@@ -89,6 +89,15 @@ onMounted(() => {
             >
               <Award class="w-3.5 h-3.5 text-amber-300" />
               <span>Рейтинг</span>
+            </router-link>
+
+            <router-link
+              to="/orders/history"
+              class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5"
+              :class="route.path === '/orders/history' ? 'bg-white/20 text-white' : 'text-blue-100 hover:text-white hover:bg-white/10'"
+            >
+              <Archive class="w-3.5 h-3.5" />
+              <span>История</span>
             </router-link>
           </nav>
         </div>

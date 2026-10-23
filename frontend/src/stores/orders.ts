@@ -12,6 +12,7 @@ import type {
   RatingLeaderboardResponse,
   UserStatisticResponse,
   DishSuggestionDto,
+  DailyPollResponse,
 } from '../types';
 
 export const useOrderStore = defineStore('orders', () => {
@@ -19,6 +20,7 @@ export const useOrderStore = defineStore('orders', () => {
   const closedOrders = ref<Page<OrderResponse> | null>(null);
   const currentOrder = ref<OrderDetailResponse | null>(null);
   const unpaidOrders = ref<NotPaidOrdersResponse | null>(null);
+  const todayPoll = ref<DailyPollResponse | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
@@ -257,11 +259,50 @@ export const useOrderStore = defineStore('orders', () => {
     }
   }
 
+  async function fetchTodayPoll(): Promise<DailyPollResponse | null> {
+    try {
+      const res = await api.get<DailyPollResponse>('/polls/today');
+      if (res.status === 204 || !res.data) {
+        todayPoll.value = null;
+        return null;
+      }
+      todayPoll.value = res.data;
+      return res.data;
+    } catch (err: any) {
+      console.error('Не удалось загрузить голосование', err);
+      todayPoll.value = null;
+      return null;
+    }
+  }
+
+  async function votePoll(restaurantId: number): Promise<DailyPollResponse | null> {
+    try {
+      const res = await api.post<DailyPollResponse>('/polls/today/vote', { restaurantId });
+      todayPoll.value = res.data;
+      return res.data;
+    } catch (err: any) {
+      error.value = err.response?.data?.message || 'Ошибка голосования';
+      throw err;
+    }
+  }
+
+  async function startTodayPoll(): Promise<DailyPollResponse | null> {
+    try {
+      const res = await api.post<DailyPollResponse>('/polls/today/start');
+      todayPoll.value = res.data;
+      return res.data;
+    } catch (err: any) {
+      error.value = err.response?.data?.message || 'Не удалось запустить голосование';
+      throw err;
+    }
+  }
+
   return {
     activeOrders,
     closedOrders,
     currentOrder,
     unpaidOrders,
+    todayPoll,
     loading,
     error,
     fetchActiveOrders,
@@ -283,5 +324,8 @@ export const useOrderStore = defineStore('orders', () => {
     fetchRatingsLeaderboard,
     fetchUserStatistics,
     fetchPreviousDishes,
+    fetchTodayPoll,
+    votePoll,
+    startTodayPoll,
   };
 });

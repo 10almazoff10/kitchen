@@ -129,4 +129,23 @@ public class TelegramService {
         }
         return cleanBaseUrl + "/orders/" + orderId;
     }
+
+    @Async
+    public void sendPollStartedNotification(List<ru.prokin.kitchen.entity.Restaurant> restaurants) {
+        String cleanBaseUrl = StringUtils.hasText(kitchenBaseUrl) ? kitchenBaseUrl.trim().replaceAll("/+$", "") : "http://localhost:8080";
+        if (!cleanBaseUrl.startsWith("http://") && !cleanBaseUrl.startsWith("https://")) {
+            cleanBaseUrl = "http://" + cleanBaseUrl;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("🗳️ <b>Голосование за выбор ресторана открыто!</b>\n\n");
+        sb.append("Куда закажем обед сегодня? Доступные варианты:\n");
+        if (restaurants != null && !restaurants.isEmpty()) {
+            for (ru.prokin.kitchen.entity.Restaurant r : restaurants) {
+                sb.append("• ").append(HtmlUtils.htmlEscape(r.getName())).append("\n");
+            }
+        }
+        sb.append("\n🔗 <a href=\"").append(cleanBaseUrl).append("\">Перейти к голосованию на сайте</a>");
+        sendMessage(sb.toString());
+    }
 }

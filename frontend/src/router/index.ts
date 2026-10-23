@@ -5,6 +5,7 @@ import OrderDetailView from '../views/OrderDetailView.vue';
 import CreateOrderView from '../views/CreateOrderView.vue';
 import RestaurantsView from '../views/RestaurantsView.vue';
 import RatingsView from '../views/RatingsView.vue';
+import OrdersHistoryView from '../views/OrdersHistoryView.vue';
 import { useAuthStore } from '../stores/auth';
 
 const router = createRouter({
@@ -20,6 +21,12 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/orders/history',
+      name: 'orders-history',
+      component: OrdersHistoryView,
       meta: { requiresAuth: true },
     },
     {

@@ -94,6 +94,161 @@
       </transition>
     </div>
 
+    <!-- Голосование за выбор ресторана на сегодня -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <Vote class="w-5 h-5" />
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                Голосование за выбор ресторана
+              </h2>
+              <span
+                v-if="todayPoll"
+                class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-900/60"
+              >
+                {{ todayPoll.totalVotes }} {{ getVotesWord(todayPoll.totalVotes) }}
+              </span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Каждое утро в 9:00 выбираем, откуда заказываем обед
+            </p>
+          </div>
+        </div>
+
+        <div v-if="!todayPoll" class="flex items-center gap-2">
+          <button
+            @click="startPoll"
+            :disabled="startingPoll"
+            class="inline-flex items-center gap-2 bg-[#274eac] hover:bg-[#1f3f8d] text-white font-semibold px-4 py-2 rounded-xl text-xs sm:text-sm shadow-xs transition active:scale-95 disabled:opacity-60 cursor-pointer"
+          >
+            <Loader2 v-if="startingPoll" class="w-4 h-4 animate-spin" />
+            <Vote v-else class="w-4 h-4" />
+            <span>Запустить голосование</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Состояние когда голосование запущено -->
+      <div v-if="todayPoll && todayPoll.options.length" class="space-y-3">
+        <!-- Баннер лидера, если есть голоса -->
+        <div
+          v-if="leadingOption && leadingOption.votesCount > 0"
+          class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl p-3.5 sm:px-4 text-xs sm:text-sm"
+        >
+          <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-medium">
+            <span>🏆</span>
+            <span>
+              Лидирует: <strong>{{ leadingOption.restaurantName }}</strong> ({{ leadingOption.votesCount }} {{ getVotesWord(leadingOption.votesCount) }})
+            </span>
+          </div>
+          <router-link
+            :to="`/create-order?restaurantId=${leadingOption.restaurantId}`"
+            class="inline-flex items-center gap-1.5 font-bold text-[#274eac] dark:text-blue-400 hover:text-[#1f3f8d] dark:hover:text-blue-300 transition shrink-0"
+          >
+            <span>Создать заказ в этом ресторане</span>
+            <ArrowRight class="w-4 h-4" />
+          </router-link>
+        </div>
+
+        <!-- Сетка вариантов ресторанов -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          <div
+            v-for="option in todayPoll.options"
+            :key="option.restaurantId"
+            class="relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 flex flex-col justify-between"
+            :class="
+              option.isMyVote
+                ? 'bg-blue-50/50 dark:bg-blue-950/30 border-[#274eac] dark:border-blue-500 shadow-xs'
+                : 'bg-white dark:bg-slate-800/60 hover:bg-slate-50/80 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-800'
+            "
+          >
+            <!-- Фоновый индикатор прогресса голосования -->
+            <div
+              class="absolute inset-y-0 left-0 bg-blue-500/10 dark:bg-blue-400/10 pointer-events-none transition-all duration-500"
+              :style="{ width: `${option.percentage}%` }"
+            ></div>
+
+            <div class="relative z-10 flex items-start justify-between gap-3">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <img
+                  v-if="option.restaurantUrl"
+                  :src="getFaviconUrl(option.restaurantUrl)"
+                  :alt="option.restaurantName"
+                  class="w-5 h-5 rounded-md object-contain shrink-0"
+                  @error="($event.target as HTMLElement).style.display = 'none'"
+                />
+                <span class="font-bold text-slate-900 dark:text-slate-100 truncate text-sm sm:text-base">
+                  {{ option.restaurantName }}
+                </span>
+              </div>
+
+              <!-- Процент и количество голосов -->
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {{ option.votesCount }}
+                </span>
+                <span class="text-[11px] font-medium text-slate-400">
+                  ({{ option.percentage }}%)
+                </span>
+              </div>
+            </div>
+
+            <div class="relative z-10 mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3">
+              <!-- Список проголосовавших аватарок -->
+              <div class="flex items-center -space-x-1.5 overflow-hidden">
+                <template v-if="option.voters && option.voters.length">
+                  <UserAvatar
+                    v-for="voter in option.voters.slice(0, 5)"
+                    :key="voter.id"
+                    :src="voter.avatarUrl"
+                    :name="voter.fullName"
+                    size-class="w-6 h-6 border-2 border-white dark:border-slate-900"
+                    :title="voter.fullName"
+                  />
+                  <span
+                    v-if="option.voters.length > 5"
+                    class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold flex items-center justify-center border-2 border-white dark:border-slate-900"
+                  >
+                    +{{ option.voters.length - 5 }}
+                  </span>
+                </template>
+                <span v-else class="text-xs text-slate-400">
+                  Пока нет голосов
+                </span>
+              </div>
+
+              <!-- Кнопка голосования -->
+              <button
+                @click="vote(option.restaurantId)"
+                :disabled="votingRestaurantId !== null"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer disabled:opacity-60"
+                :class="
+                  option.isMyVote
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'
+                "
+              >
+                <Loader2 v-if="votingRestaurantId === option.restaurantId" class="w-3.5 h-3.5 animate-spin" />
+                <Check v-else-if="option.isMyVote" class="w-3.5 h-3.5" />
+                <span>{{ option.isMyVote ? 'Мой выбор' : 'Голосовать' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Если голосование еще не запущено сегодня -->
+      <div v-else-if="!todayPoll" class="text-center py-6">
+        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+          Сегодня голосование еще не проводилось. Вы можете запустить его прямо сейчас, и бот уведомит команду в Telegram!
+        </p>
+      </div>
+    </section>
+
     <!-- Секция активных заказов -->
     <section class="space-y-4">
       <div class="flex items-center justify-between">
@@ -221,107 +376,102 @@
       </div>
     </section>
 
-    <!-- Секция завершённых заказов -->
+    <!-- Секция недавних завершённых заказов (только 3 последних + переход ко всем) -->
     <section v-if="closedOrders && closedOrders.content.length" class="space-y-4 pt-4 border-t border-slate-200/80 dark:border-slate-800">
       <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Завершённые заказы</h2>
-        <span class="text-xs text-slate-500 dark:text-slate-400">
-          Всего: {{ closedOrders.totalElements }}
-        </span>
+        <div>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+            Недавние завершённые заказы
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Последние выполненные заказы команды
+          </p>
+        </div>
+
+        <router-link
+          to="/orders/history"
+          class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#274eac] dark:text-blue-400 hover:text-[#1f3f8d] dark:hover:text-blue-300 hover:underline transition"
+        >
+          <Archive class="w-4 h-4" />
+          <span>Все заказы ({{ closedOrders.totalElements }})</span>
+          <ArrowRight class="w-4 h-4" />
+        </router-link>
       </div>
 
-      <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-            <thead class="bg-slate-50 dark:bg-slate-800/60 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200/60 dark:border-slate-800">
-              <tr>
-                <th class="px-5 py-3.5">Ресторан</th>
-                <th class="px-5 py-3.5">Дедлайн</th>
-                <th class="px-5 py-3.5">Организатор</th>
-                <th class="px-5 py-3.5">Сумма</th>
-                <th class="px-5 py-3.5 text-right">Действие</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr
-                v-for="order in closedOrders.content"
-                :key="order.id"
-                class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition"
-              >
-                <td class="px-5 py-4 font-semibold text-slate-900 dark:text-slate-100">
-                  <div class="flex items-center gap-2">
-                    <img
-                      v-if="order.restaurant.websiteUrl"
-                      :src="getFaviconUrl(order.restaurant.websiteUrl)"
-                      :alt="order.restaurant.name"
-                      class="w-4 h-4 rounded object-contain shrink-0"
-                      @error="($event.target as HTMLElement).style.display = 'none'"
-                    />
-                    <span>{{ order.restaurant.name }}</span>
-                  </div>
-                </td>
-                <td class="px-5 py-4 text-xs text-slate-500 dark:text-slate-400">
-                  {{ formatDateTime(order.deadlineTime) }}
-                </td>
-                <td class="px-5 py-4 text-xs text-slate-600 dark:text-slate-300">
-                  <div class="flex items-center gap-2">
-                    <UserAvatar
-                      :src="order.createdBy.avatarUrl"
-                      :name="order.createdBy.fullName"
-                      size-class="w-5 h-5"
-                    />
-                    <span>{{ order.createdBy.fullName }}</span>
-                  </div>
-                </td>
-                <td class="px-5 py-4 font-bold text-slate-900 dark:text-slate-100">
-                  {{ formatPrice(order.totalAmount) }}
-                </td>
-                <td class="px-5 py-4 text-right">
-                  <router-link
-                    :to="`/orders/${order.id}`"
-                    class="inline-flex items-center gap-1 text-xs font-semibold text-[#274eac] dark:text-blue-400 hover:text-[#1f3f8d] dark:hover:text-blue-300 bg-[#eff4fe] dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 px-3 py-1.5 rounded-lg transition"
-                  >
-                    <span>Смотреть</span>
-                    <ArrowRight class="w-3.5 h-3.5" />
-                  </router-link>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Пагинация -->
-        <div
-          v-if="closedOrders.totalPages > 1"
-          class="px-5 py-3.5 bg-slate-50/60 dark:bg-slate-800/60 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs"
+      <!-- Сетка 3 последних закрытых заказов -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <router-link
+          v-for="order in recentClosedOrders"
+          :key="order.id"
+          :to="`/orders/${order.id}`"
+          class="group bg-white hover:bg-slate-50/80 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 transition-all flex flex-col justify-between"
         >
-          <button
-            @click="prevPage"
-            :disabled="closedPage === 0"
-            class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition cursor-pointer disabled:cursor-not-allowed"
-          >
-            ← Предыдущая
-          </button>
-          <span class="text-slate-500 dark:text-slate-400 font-medium">
-            Страница {{ closedPage + 1 }} из {{ closedOrders.totalPages }}
-          </span>
-          <button
-            @click="nextPage"
-            :disabled="closedPage + 1 >= closedOrders.totalPages"
-            class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 transition cursor-pointer disabled:cursor-not-allowed"
-          >
-            Следующая →
-          </button>
-        </div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <img
+                  v-if="order.restaurant.websiteUrl"
+                  :src="getFaviconUrl(order.restaurant.websiteUrl)"
+                  :alt="order.restaurant.name"
+                  class="w-4 h-4 rounded object-contain shrink-0"
+                  @error="($event.target as HTMLElement).style.display = 'none'"
+                />
+                <span class="font-bold text-slate-900 dark:text-slate-100 truncate text-sm group-hover:text-[#274eac] dark:group-hover:text-blue-400 transition">
+                  {{ order.restaurant.name }}
+                </span>
+              </div>
+              <span class="text-[11px] font-medium text-slate-400">
+                #{{ order.id }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <Clock class="w-3.5 h-3.5 text-slate-400" />
+              <span>{{ formatDateTime(order.deadlineTime) }}</span>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <UserAvatar
+                :src="order.createdBy.avatarUrl"
+                :name="order.createdBy.fullName"
+                size-class="w-4 h-4"
+              />
+              <span class="truncate">{{ order.createdBy.fullName }}</span>
+            </div>
+          </div>
+
+          <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <span class="text-sm font-bold text-slate-900 dark:text-slate-100">
+              {{ formatPrice(order.totalAmount) }}
+            </span>
+            <span class="text-xs font-semibold text-[#274eac] dark:text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+              <span>Смотреть</span>
+              <ArrowRight class="w-3 h-3" />
+            </span>
+          </div>
+        </router-link>
+      </div>
+
+      <!-- Кнопка перехода ко всей истории -->
+      <div class="pt-2 flex justify-center">
+        <router-link
+          to="/orders/history"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold shadow-2xs transition active:scale-95"
+        >
+          <Archive class="w-4 h-4 text-slate-500" />
+          <span>Перейти ко всем заказам ({{ closedOrders.totalElements }})</span>
+          <ArrowRight class="w-4 h-4" />
+        </router-link>
       </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useOrderStore } from '@/stores/orders';
 import { useAuthStore } from '@/stores/auth';
+import { useToastStore } from '@/stores/toast';
 import { storeToRefs } from 'pinia';
 import UserAvatar from '@/components/UserAvatar.vue';
 import {
@@ -336,22 +486,33 @@ import {
   UtensilsCrossed,
   PlusCircle,
   Clock,
-  User as UserIcon,
   ArrowRight,
   AlertCircle,
   Coins,
   RefreshCw,
   Loader2,
   ChevronDown,
+  Vote,
+  Check,
+  Archive,
 } from 'lucide-vue-next';
 
 const orderStore = useOrderStore();
 const authStore = useAuthStore();
+const toastStore = useToastStore();
 
-const { activeOrders, closedOrders, unpaidOrders, loading } = storeToRefs(orderStore);
+const { activeOrders, closedOrders, unpaidOrders, todayPoll, loading } = storeToRefs(orderStore);
 
-const closedPage = ref(0);
 const showUnpaidDetails = ref(false);
+const votingRestaurantId = ref<number | null>(null);
+const startingPoll = ref(false);
+
+const recentClosedOrders = computed(() => closedOrders.value?.content.slice(0, 3) || []);
+
+const leadingOption = computed(() => {
+  if (!todayPoll.value || !todayPoll.value.options.length) return null;
+  return todayPoll.value.options[0];
+});
 
 const userStats = ref<UserStatisticResponse>({
   totalSpentThisMonth: 0,
@@ -360,10 +521,43 @@ const userStats = ref<UserStatisticResponse>({
   totalOrdersAllTime: 0,
 });
 
+function getVotesWord(count: number): string {
+  const rem10 = count % 10;
+  const rem100 = count % 100;
+  if (rem100 >= 11 && rem100 <= 19) return 'голосов';
+  if (rem10 === 1) return 'голос';
+  if (rem10 >= 2 && rem10 <= 4) return 'голоса';
+  return 'голосов';
+}
+
+async function vote(restaurantId: number) {
+  votingRestaurantId.value = restaurantId;
+  try {
+    await orderStore.votePoll(restaurantId);
+  } catch (e: any) {
+    toastStore.error(e.response?.data?.message || 'Ошибка при голосовании');
+  } finally {
+    votingRestaurantId.value = null;
+  }
+}
+
+async function startPoll() {
+  startingPoll.value = true;
+  try {
+    await orderStore.startTodayPoll();
+    toastStore.success('Голосование запущено! Оповещение отправлено в Telegram.');
+  } catch (e: any) {
+    toastStore.error(e.response?.data?.message || 'Не удалось запустить голосование');
+  } finally {
+    startingPoll.value = false;
+  }
+}
+
 async function loadData() {
   await Promise.all([
     orderStore.fetchActiveOrders(),
-    orderStore.fetchClosedOrders(closedPage.value),
+    orderStore.fetchClosedOrders(0, 3),
+    orderStore.fetchTodayPoll(),
     orderStore.fetchUnpaidOrders(),
     loadUserStats(),
   ]);
@@ -375,20 +569,6 @@ async function loadUserStats() {
     userStats.value = stats;
   } catch (e) {
     console.error('Failed to load user stats', e);
-  }
-}
-
-function nextPage() {
-  if (closedOrders.value && closedPage.value + 1 < closedOrders.value.totalPages) {
-    closedPage.value++;
-    orderStore.fetchClosedOrders(closedPage.value);
-  }
-}
-
-function prevPage() {
-  if (closedPage.value > 0) {
-    closedPage.value--;
-    orderStore.fetchClosedOrders(closedPage.value);
   }
 }
 
