@@ -49,7 +49,7 @@ onMounted(() => {
     <div class="food-doodle-bg"></div>
 
     <!-- Фирменный хедер Kitchen -->
-    <header class="header-logo sticky top-0 z-30 shadow-md">
+    <header class="sticky top-0 z-30 shadow-md bg-[#274eac] border-b border-[#1f3f8d] dark:bg-[#111e3b] dark:border-slate-800">
       <div class="header-container max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <!-- Левая часть: логотип + название + разделы навигации -->
         <div class="header-left flex items-center gap-3 sm:gap-5">
@@ -108,7 +108,7 @@ onMounted(() => {
           <router-link
             v-if="!isLoginPage && unpaidCount > 0"
             to="/"
-            class="header-nav-item btn-debt text-decoration-none relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs"
+            class="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-800 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 dark:border-rose-900/50 dark:text-rose-200 active:scale-95"
             title="У вас есть неоплаченные заказы"
           >
             <span class="text-base leading-none">🚨</span>
@@ -224,38 +224,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.header-logo {
-  background-color: #274eac;
-  border-bottom: 1px solid #1f3f8d;
-}
-
-:global(.dark) .header-logo {
-  background-color: #111e3b;
-  border-bottom: 1px solid #1e293b;
-}
-
-.btn-debt {
-  background: #fee2e2 !important;
-  border: 1px solid #fca5a5 !important;
-  color: #991b1b !important;
-}
-
-:global(.dark) .btn-debt {
-  background: rgba(225, 29, 72, 0.15) !important;
-  border: 1px solid transparent !important;
-  color: #fda4af !important;
-}
-
-.btn-debt:hover {
-  background: #fecaca !important;
-  border-color: #f87171 !important;
-}
-
-:global(.dark) .btn-debt:hover {
-  background: rgba(225, 29, 72, 0.25) !important;
-  border-color: transparent !important;
-}
-
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.25s ease;
