@@ -451,18 +451,6 @@
           </div>
         </router-link>
       </div>
-
-      <!-- Кнопка перехода ко всей истории -->
-      <div class="pt-2 flex justify-center">
-        <router-link
-          to="/orders/history"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold shadow-2xs transition active:scale-95"
-        >
-          <Archive class="w-4 h-4 text-slate-500" />
-          <span>Перейти ко всем заказам ({{ closedOrders.totalElements }})</span>
-          <ArrowRight class="w-4 h-4" />
-        </router-link>
-      </div>
     </section>
   </div>
 </template>
