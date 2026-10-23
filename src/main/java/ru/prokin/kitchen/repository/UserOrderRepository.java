@@ -5,6 +5,7 @@ import org.springframework.data.repository.query.Param;
 import ru.prokin.kitchen.entity.Order;
 import ru.prokin.kitchen.entity.UserOrder;
 import ru.prokin.kitchen.entity.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -66,5 +67,10 @@ public interface UserOrderRepository extends JpaRepository<UserOrder, Long> {
     // Найти все неоплаченные позиции конкретного пользователя
     List<UserOrder> findByUserAndIsPaidFalseOrderByIdDesc(User user);
 
-
+    @Query("SELECT uo FROM UserOrder uo JOIN uo.order o WHERE uo.user = :user AND o.restaurant.id = :restaurantId ORDER BY uo.id DESC")
+    List<UserOrder> findPreviousDishesByUserAndRestaurant(
+            @Param("user") User user,
+            @Param("restaurantId") Long restaurantId,
+            Pageable pageable
+    );
 }

@@ -150,3 +150,8 @@ export interface Page<T> {
   first: boolean;
   last: boolean;
 }
+
+export interface DishSuggestionDto {
+  itemDescription: string;
+  price: number;
+}

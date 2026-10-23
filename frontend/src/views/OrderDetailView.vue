@@ -234,46 +234,76 @@
 
         <form
           @submit.prevent="submitManualItem"
-          class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end pt-1"
+          class="space-y-3 pt-1"
         >
-          <div class="sm:col-span-7">
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-              Название блюда
-            </label>
-            <input
-              v-model="manualItemDescription"
-              type="text"
-              required
-              placeholder="Например, Пицца Пепперони 30 см"
-              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#274eac]/20 focus:border-[#274eac] text-sm"
-            />
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div class="sm:col-span-7">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                Название блюда
+              </label>
+              <input
+                v-model="manualItemDescription"
+                type="text"
+                required
+                placeholder="Например, Пицца Пепперони 30 см"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#274eac]/20 focus:border-[#274eac] text-sm"
+              />
+            </div>
+
+            <div class="sm:col-span-3">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                Цена (₽)
+              </label>
+              <input
+                v-model.number="manualPrice"
+                type="number"
+                min="0"
+                step="1"
+                required
+                placeholder="590"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#274eac]/20 focus:border-[#274eac] text-sm"
+              />
+            </div>
+
+            <div class="sm:col-span-2">
+              <button
+                type="submit"
+                :disabled="addingItem"
+                class="w-full py-2.5 px-4 bg-[#274eac] hover:bg-[#1f3f8d] text-white font-medium text-sm rounded-xl shadow-sm transition active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Loader2 v-if="addingItem" class="w-4 h-4 animate-spin" />
+                <Plus v-else class="w-4 h-4" />
+                <span>Добавить</span>
+              </button>
+            </div>
           </div>
 
-          <div class="sm:col-span-3">
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-              Цена (₽)
-            </label>
-            <input
-              v-model.number="manualPrice"
-              type="number"
-              min="0"
-              step="1"
-              required
-              placeholder="590"
-              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#274eac]/20 focus:border-[#274eac] text-sm"
-            />
-          </div>
-
-          <div class="sm:col-span-2">
-            <button
-              type="submit"
-              :disabled="addingItem"
-              class="w-full py-2.5 px-4 bg-[#274eac] hover:bg-[#1f3f8d] text-white font-medium text-sm rounded-xl shadow-sm transition active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <Loader2 v-if="addingItem" class="w-4 h-4 animate-spin" />
-              <Plus v-else class="w-4 h-4" />
-              <span>Добавить</span>
-            </button>
+          <!-- Подсказки из предыдущих заказов по текущему ресторану -->
+          <div v-if="filteredSuggestions.length > 0" class="pt-1">
+            <div class="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              <History class="w-3.5 h-3.5 text-[#274eac] dark:text-blue-400" />
+              <span>Ранее вы заказывали здесь:</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+              <button
+                v-for="dish in filteredSuggestions"
+                :key="dish.itemDescription"
+                type="button"
+                @click="applySuggestion(dish)"
+                class="group inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/60 hover:bg-[#eff4fe] hover:border-[#bfdbfe] dark:hover:bg-blue-950/50 dark:hover:border-blue-800/80 text-slate-700 dark:text-slate-300 hover:text-[#274eac] dark:hover:text-blue-300 transition-all cursor-pointer shadow-2xs"
+                :title="`Выбрать «${dish.itemDescription}» (${dish.price ? dish.price + ' ₽' : 'цена не указана'})`"
+              >
+                <span class="font-medium group-hover:underline decoration-[#274eac]/40 underline-offset-2">
+                  {{ dish.itemDescription }}
+                </span>
+                <span
+                  v-if="dish.price"
+                  class="px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-700/70 text-slate-500 dark:text-slate-400 group-hover:bg-[#dbeafe] group-hover:text-[#183375] dark:group-hover:bg-blue-900/60 dark:group-hover:text-blue-200 font-semibold font-mono text-[11px] border border-slate-200/60 dark:border-slate-600/60"
+                >
+                  {{ dish.price }} ₽
+                </span>
+              </button>
+            </div>
           </div>
         </form>
       </section>
@@ -654,7 +684,7 @@ import {
   isDeadlinePassed,
   getFaviconUrl,
 } from '@/utils/format';
-import type { OrderItemResponse } from '@/types';
+import type { OrderItemResponse, DishSuggestionDto } from '@/types';
 import {
   ArrowLeft,
   RefreshCw,
@@ -674,6 +704,7 @@ import {
   Star,
   Pencil,
   Trash2,
+  History,
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -711,6 +742,36 @@ const manualItemDescription = ref('');
 const manualPrice = ref<number | null>(null);
 const addingItem = ref(false);
 
+// Подсказки блюд из предыдущих заказов по текущему ресторану
+const dishSuggestions = ref<DishSuggestionDto[]>([]);
+const loadingSuggestions = ref(false);
+
+const filteredSuggestions = computed(() => {
+  const query = manualItemDescription.value.trim().toLowerCase();
+  if (!query) return dishSuggestions.value;
+  return dishSuggestions.value.filter((d) =>
+    d.itemDescription.toLowerCase().includes(query)
+  );
+});
+
+function applySuggestion(dish: DishSuggestionDto) {
+  manualItemDescription.value = dish.itemDescription;
+  if (dish.price !== undefined && dish.price !== null) {
+    manualPrice.value = dish.price;
+  }
+}
+
+async function loadSuggestions(restaurantId: number) {
+  loadingSuggestions.value = true;
+  try {
+    dishSuggestions.value = await orderStore.fetchPreviousDishes(restaurantId);
+  } catch (err) {
+    console.error('Failed to load dish suggestions', err);
+  } finally {
+    loadingSuggestions.value = false;
+  }
+}
+
 // Модалка закрытия заказа
 const showCloseModal = ref(false);
 const closeDeliveryCost = ref<number>(0);
@@ -731,6 +792,9 @@ const updatingComment = ref(false);
 async function loadOrder() {
   try {
     await orderStore.fetchOrderDetail(orderId);
+    if (orderDetail.value?.order?.restaurant?.id) {
+      await loadSuggestions(orderDetail.value.order.restaurant.id);
+    }
   } catch (err) {
     console.error('Failed to load order detail', err);
   }
@@ -778,12 +842,28 @@ async function submitManualItem() {
   if (!manualItemDescription.value.trim() || manualPrice.value === null) return;
 
   addingItem.value = true;
+  const desc = manualItemDescription.value.trim();
+  const price = manualPrice.value;
+
   try {
     await orderStore.addItem(orderId, {
-      itemDescription: manualItemDescription.value.trim(),
-      price: manualPrice.value,
+      itemDescription: desc,
+      price: price,
     });
-    toastStore.success(`Добавлено: ${manualItemDescription.value}`);
+    toastStore.success(`Добавлено: ${desc}`);
+
+    // Добавляем или перемещаем наверх в списке подсказок
+    const existingIndex = dishSuggestions.value.findIndex(
+      (d) => d.itemDescription.toLowerCase() === desc.toLowerCase()
+    );
+    if (existingIndex >= 0) {
+      dishSuggestions.value.splice(existingIndex, 1);
+    }
+    dishSuggestions.value.unshift({
+      itemDescription: desc,
+      price: price,
+    });
+
     manualItemDescription.value = '';
     manualPrice.value = null;
   } catch (err: any) {

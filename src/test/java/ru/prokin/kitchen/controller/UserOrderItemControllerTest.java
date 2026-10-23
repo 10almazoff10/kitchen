@@ -210,4 +210,95 @@ class UserOrderItemControllerTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void testGetPreviousItems_Success() throws Exception {
+        // First order of Pad Thai with price 400
+        UserOrder item1 = new UserOrder();
+        item1.setOrder(order);
+        item1.setUser(user);
+        item1.setItemDescription("Pad Thai");
+        item1.setPrice(new BigDecimal("400.00"));
+        userOrderRepository.save(item1);
+
+        // Order of Tom Yum
+        UserOrder item2 = new UserOrder();
+        item2.setOrder(order);
+        item2.setUser(user);
+        item2.setItemDescription("Tom Yum");
+        item2.setPrice(new BigDecimal("500.00"));
+        userOrderRepository.save(item2);
+
+        // Later order of Pad Thai with new price 450
+        UserOrder item3 = new UserOrder();
+        item3.setOrder(order);
+        item3.setUser(user);
+        item3.setItemDescription("Pad Thai");
+        item3.setPrice(new BigDecimal("450.00"));
+        userOrderRepository.save(item3);
+
+        // Other user's item (should not be in results)
+        User otherUser = new User();
+        otherUser.setUsername("other_user");
+        otherUser.setFullName("Other User");
+        otherUser.setPassword("pwd");
+        otherUser = userRepository.save(otherUser);
+
+        UserOrder otherUserItem = new UserOrder();
+        otherUserItem.setOrder(order);
+        otherUserItem.setUser(otherUser);
+        otherUserItem.setItemDescription("Fried Rice");
+        otherUserItem.setPrice(new BigDecimal("300.00"));
+        userOrderRepository.save(otherUserItem);
+
+        // Other restaurant's item for current user (should not be in results)
+        Restaurant otherRestaurant = new Restaurant();
+        otherRestaurant.setName("Burger Place");
+        otherRestaurant.setWebsiteUrl("https://burger.test");
+        otherRestaurant = restaurantRepository.save(otherRestaurant);
+
+        Order otherOrder = new Order();
+        otherOrder.setRestaurant(otherRestaurant);
+        otherOrder.setCreatedBy(user);
+        otherOrder.setDeadlineTime(LocalDateTime.now().plusHours(1));
+        otherOrder = orderRepository.save(otherOrder);
+
+        UserOrder otherRestItem = new UserOrder();
+        otherRestItem.setOrder(otherOrder);
+        otherRestItem.setUser(user);
+        otherRestItem.setItemDescription("Cheeseburger");
+        otherRestItem.setPrice(new BigDecimal("350.00"));
+        userOrderRepository.save(otherRestItem);
+
+        // Test GET /api/v1/restaurants/{id}/previous-items
+        mockMvc.perform(get("/api/v1/restaurants/" + order.getRestaurant().getId() + "/previous-items")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()", equalTo(2)))
+                .andExpect(jsonPath("$[0].itemDescription", equalTo("Pad Thai")))
+                .andExpect(jsonPath("$[0].price", equalTo(450.00)))
+                .andExpect(jsonPath("$[1].itemDescription", equalTo("Tom Yum")))
+                .andExpect(jsonPath("$[1].price", equalTo(500.00)));
+
+        // Test GET /api/v1/orders/{orderId}/previous-items
+        mockMvc.perform(get("/api/v1/orders/" + order.getId() + "/previous-items")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()", equalTo(2)))
+                .andExpect(jsonPath("$[0].itemDescription", equalTo("Pad Thai")))
+                .andExpect(jsonPath("$[0].price", equalTo(450.00)));
+    }
+
+    @Test
+    void testGetPreviousItems_EmptyWhenNoOrders() throws Exception {
+        Restaurant emptyRestaurant = new Restaurant();
+        emptyRestaurant.setName("Empty Cafe");
+        emptyRestaurant.setWebsiteUrl("https://empty.test");
+        emptyRestaurant = restaurantRepository.save(emptyRestaurant);
+
+        mockMvc.perform(get("/api/v1/restaurants/" + emptyRestaurant.getId() + "/previous-items")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()", equalTo(0)));
+    }
 }

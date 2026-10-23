@@ -11,6 +11,7 @@ import type {
   NotPaidOrdersResponse,
   RatingLeaderboardResponse,
   UserStatisticResponse,
+  DishSuggestionDto,
 } from '../types';
 
 export const useOrderStore = defineStore('orders', () => {
@@ -246,6 +247,16 @@ export const useOrderStore = defineStore('orders', () => {
     }
   }
 
+  async function fetchPreviousDishes(restaurantId: number): Promise<DishSuggestionDto[]> {
+    try {
+      const res = await api.get<DishSuggestionDto[]>(`/restaurants/${restaurantId}/previous-items`);
+      return res.data;
+    } catch (err: any) {
+      console.error('Не удалось загрузить историю блюд', err);
+      return [];
+    }
+  }
+
   return {
     activeOrders,
     closedOrders,
@@ -271,5 +282,6 @@ export const useOrderStore = defineStore('orders', () => {
     fetchUnpaidOrders,
     fetchRatingsLeaderboard,
     fetchUserStatistics,
+    fetchPreviousDishes,
   };
 });

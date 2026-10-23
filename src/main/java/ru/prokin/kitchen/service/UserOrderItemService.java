@@ -3,7 +3,9 @@ package ru.prokin.kitchen.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
 import ru.prokin.kitchen.dto.AddOrderItemRequest;
+import ru.prokin.kitchen.dto.DishSuggestionDto;
 import ru.prokin.kitchen.dto.OrderItemResponse;
 import ru.prokin.kitchen.dto.UpdateOrderItemRequest;
 import ru.prokin.kitchen.entity.Order;
@@ -15,7 +17,11 @@ import ru.prokin.kitchen.repository.OrderRepository;
 import ru.prokin.kitchen.repository.UserOrderRepository;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -170,5 +176,39 @@ public class UserOrderItemService {
                 .totalDebt(totalDebt)
                 .totalCount(items.size())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DishSuggestionDto> getPreviousDishes(Long restaurantId, User user) {
+        if (user == null || restaurantId == null) {
+            return Collections.emptyList();
+        }
+        List<UserOrder> recentOrders = userOrderRepo.findPreviousDishesByUserAndRestaurant(
+                user, restaurantId, PageRequest.of(0, 100)
+        );
+        Map<String, DishSuggestionDto> distinct = new LinkedHashMap<>();
+        for (UserOrder uo : recentOrders) {
+            if (uo.getItemDescription() == null) continue;
+            String desc = uo.getItemDescription().trim();
+            if (desc.isEmpty()) continue;
+            String key = desc.toLowerCase();
+            if (!distinct.containsKey(key)) {
+                distinct.put(key, new DishSuggestionDto(desc, uo.getPrice()));
+                if (distinct.size() >= 20) {
+                    break;
+                }
+            }
+        }
+        return new ArrayList<>(distinct.values());
+    }
+
+    @Transactional(readOnly = true)
+    public List<DishSuggestionDto> getPreviousDishesForOrder(Long orderId, User user) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Заказ с ID " + orderId + " не найден"));
+        if (order.getRestaurant() == null) {
+            return Collections.emptyList();
+        }
+        return getPreviousDishes(order.getRestaurant().getId(), user);
     }
 }

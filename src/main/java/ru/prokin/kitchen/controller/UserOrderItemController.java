@@ -6,10 +6,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.prokin.kitchen.dto.AddOrderItemRequest;
+import ru.prokin.kitchen.dto.DishSuggestionDto;
 import ru.prokin.kitchen.dto.OrderItemResponse;
 import ru.prokin.kitchen.dto.UpdateOrderItemRequest;
 import ru.prokin.kitchen.entity.User;
 import ru.prokin.kitchen.service.UserOrderItemService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -95,5 +98,21 @@ public class UserOrderItemController {
             @AuthenticationPrincipal User user
     ) {
         return ResponseEntity.ok(itemService.getMyUnpaidOrders(user));
+    }
+
+    @GetMapping("/restaurants/{restaurantId}/previous-items")
+    public ResponseEntity<List<DishSuggestionDto>> getPreviousItems(
+            @PathVariable Long restaurantId,
+            @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(itemService.getPreviousDishes(restaurantId, user));
+    }
+
+    @GetMapping("/orders/{orderId}/previous-items")
+    public ResponseEntity<List<DishSuggestionDto>> getPreviousItemsForOrder(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(itemService.getPreviousDishesForOrder(orderId, user));
     }
 }
