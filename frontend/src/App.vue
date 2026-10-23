@@ -233,7 +233,7 @@ onMounted(() => {
 
 :global(.dark) .btn-debt {
   background: rgba(225, 29, 72, 0.15) !important;
-  border: 1px solid rgba(225, 29, 72, 0.35) !important;
+  border: 1px solid transparent !important;
   color: #fda4af !important;
 }
 
@@ -244,7 +244,7 @@ onMounted(() => {
 
 :global(.dark) .btn-debt:hover {
   background: rgba(225, 29, 72, 0.25) !important;
-  border-color: rgba(225, 29, 72, 0.55) !important;
+  border-color: transparent !important;
 }
 
 .toast-enter-active,
