@@ -9,6 +9,14 @@ export interface UserDto {
   isAdLinked?: boolean;
 }
 
+export interface AuthResponse {
+  token: string;
+  refreshToken?: string;
+  tokenType: string;
+  user: UserDto;
+  requiresAdLink?: boolean;
+}
+
 export interface RestaurantResponse {
   id: number;
   name: string;

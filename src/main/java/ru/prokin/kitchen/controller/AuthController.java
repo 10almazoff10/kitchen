@@ -9,12 +9,15 @@ import ru.prokin.kitchen.dto.AuthResponse;
 import ru.prokin.kitchen.dto.AuthResult;
 import ru.prokin.kitchen.dto.LinkAdRequest;
 import ru.prokin.kitchen.dto.LoginRequest;
+import ru.prokin.kitchen.dto.RefreshTokenRequest;
 import ru.prokin.kitchen.dto.UpdateProfileRequest;
 import ru.prokin.kitchen.dto.UserDto;
+import ru.prokin.kitchen.entity.RefreshToken;
 import ru.prokin.kitchen.entity.User;
 import ru.prokin.kitchen.repository.UserRepository;
 import ru.prokin.kitchen.security.JwtTokenProvider;
 import ru.prokin.kitchen.security.LdapAuthService;
+import ru.prokin.kitchen.service.RefreshTokenService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -23,6 +26,7 @@ public class AuthController {
 
     private final LdapAuthService ldapAuthService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
 
     @PostMapping("/login")
@@ -30,15 +34,41 @@ public class AuthController {
         AuthResult authResult = ldapAuthService.authenticate(request.getUsername(), request.getPassword());
         User user = authResult.getUser();
         String token = jwtTokenProvider.generateToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         AuthResponse response = AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken.getToken())
                 .tokenType("Bearer")
                 .user(UserDto.fromEntity(user))
                 .requiresAdLink(authResult.isRequiresAdLink())
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(request.getRefreshToken());
+        User user = newRefreshToken.getUser();
+        String newAccessToken = jwtTokenProvider.generateToken(user);
+
+        AuthResponse response = AuthResponse.builder()
+                .token(newAccessToken)
+                .refreshToken(newRefreshToken.getToken())
+                .tokenType("Bearer")
+                .user(UserDto.fromEntity(user))
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody(required = false) RefreshTokenRequest request) {
+        if (request != null && request.getRefreshToken() != null) {
+            refreshTokenService.revokeToken(request.getRefreshToken());
+        }
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/link-ad")
@@ -52,9 +82,11 @@ public class AuthController {
 
         User updatedUser = ldapAuthService.linkAdAccount(currentUser, request.getAdUsername(), request.getAdPassword());
         String newToken = jwtTokenProvider.generateToken(updatedUser);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(updatedUser);
 
         AuthResponse response = AuthResponse.builder()
                 .token(newToken)
+                .refreshToken(refreshToken.getToken())
                 .tokenType("Bearer")
                 .user(UserDto.fromEntity(updatedUser))
                 .requiresAdLink(false)

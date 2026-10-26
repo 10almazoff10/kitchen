@@ -61,12 +61,13 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
   const token = localStorage.getItem('kitchen_token');
+  const refreshToken = localStorage.getItem('kitchen_refresh_token');
+  const hasAuth = !!token || !!refreshToken;
 
-  if (to.meta.requiresAuth && !token) {
+  if (to.meta.requiresAuth && !hasAuth) {
     next({ name: 'login' });
-  } else if (to.meta.guestOnly && token) {
+  } else if (to.meta.guestOnly && hasAuth) {
     next({ name: 'home' });
   } else {
     next();

@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: golovoshot/kitchen:backend-2.2.0
+    image: golovoshot/kitchen:backend-2.3.0
     depends_on:
       db:
         condition: service_healthy
@@ -48,7 +48,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: golovoshot/kitchen:frontend-2.2.0
+    image: golovoshot/kitchen:frontend-2.3.0
     environment:
       TZ: ${TZ:-Asia/Barnaul}
     depends_on:

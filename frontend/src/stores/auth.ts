@@ -15,6 +15,7 @@ export interface User {
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('kitchen_token'));
+  const refreshToken = ref<string | null>(localStorage.getItem('kitchen_refresh_token'));
   const user = ref<User | null>(
     localStorage.getItem('kitchen_user')
       ? JSON.parse(localStorage.getItem('kitchen_user') as string)
@@ -22,17 +23,27 @@ export const useAuthStore = defineStore('auth', () => {
   );
   const loading = ref(false);
 
-  const isAuthenticated = computed(() => !!token.value);
+  const isAuthenticated = computed(() => !!token.value || !!refreshToken.value);
+
+  function setAuthData(data: { token: string; refreshToken?: string; user?: User }) {
+    token.value = data.token;
+    localStorage.setItem('kitchen_token', data.token);
+
+    if (data.refreshToken) {
+      refreshToken.value = data.refreshToken;
+      localStorage.setItem('kitchen_refresh_token', data.refreshToken);
+    }
+    if (data.user) {
+      user.value = data.user;
+      localStorage.setItem('kitchen_user', JSON.stringify(data.user));
+    }
+  }
 
   async function login(username: string, password: string) {
     loading.value = true;
     try {
       const response = await api.post('/auth/login', { username, password });
-      token.value = response.data.token;
-      user.value = response.data.user;
-
-      localStorage.setItem('kitchen_token', response.data.token);
-      localStorage.setItem('kitchen_user', JSON.stringify(response.data.user));
+      setAuthData(response.data);
       return response.data;
     } finally {
       loading.value = false;
@@ -43,19 +54,30 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true;
     try {
       const response = await api.post('/auth/link-ad', { adUsername, adPassword });
-      token.value = response.data.token;
-      user.value = response.data.user;
-
-      localStorage.setItem('kitchen_token', response.data.token);
-      localStorage.setItem('kitchen_user', JSON.stringify(response.data.user));
+      setAuthData(response.data);
       return response.data;
     } finally {
       loading.value = false;
     }
   }
 
+  async function refreshSession() {
+    if (!refreshToken.value) {
+      logout();
+      throw new Error('Refresh token отсутствует');
+    }
+    try {
+      const response = await api.post('/auth/refresh', { refreshToken: refreshToken.value });
+      setAuthData(response.data);
+      return response.data;
+    } catch (e) {
+      logout();
+      throw e;
+    }
+  }
+
   async function fetchMe() {
-    if (!token.value) return;
+    if (!token.value && !refreshToken.value) return;
     try {
       const response = await api.get('/auth/me');
       user.value = response.data;
@@ -77,20 +99,34 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
+  async function logout() {
+    const currentRefreshToken = refreshToken.value;
     token.value = null;
+    refreshToken.value = null;
     user.value = null;
     localStorage.removeItem('kitchen_token');
+    localStorage.removeItem('kitchen_refresh_token');
     localStorage.removeItem('kitchen_user');
+
+    if (currentRefreshToken) {
+      try {
+        await api.post('/auth/logout', { refreshToken: currentRefreshToken });
+      } catch {
+        // Игнорируем сетевые ошибки при выходе
+      }
+    }
   }
 
   return {
     token,
+    refreshToken,
     user,
     loading,
     isAuthenticated,
+    setAuthData,
     login,
     linkAd,
+    refreshSession,
     updateProfile,
     fetchMe,
     logout,
