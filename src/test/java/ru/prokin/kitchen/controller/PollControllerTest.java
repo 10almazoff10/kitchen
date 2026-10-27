@@ -21,6 +21,8 @@ import ru.prokin.kitchen.security.JwtTokenProvider;
 import ru.prokin.kitchen.service.TelegramService;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -116,31 +118,12 @@ class PollControllerTest {
                         .content(objectMapper.writeValueAsString(req1)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalVotes", equalTo(1)))
-                .andExpect(jsonPath("$.myVotedRestaurantId", equalTo(r1.getId().intValue())))
+                .andExpect(jsonPath("$.myVotedRestaurantIds", hasItem(r1.getId().intValue())))
                 .andExpect(jsonPath("$.options[0].restaurantId", equalTo(r1.getId().intValue())))
                 .andExpect(jsonPath("$.options[0].votesCount", equalTo(1)))
                 .andExpect(jsonPath("$.options[0].isMyVote", equalTo(true)));
 
-        // 2. User2 also votes for Pizza Place
-        VoteRequest req2 = new VoteRequest(r1.getId());
-        mockMvc.perform(post("/api/v1/polls/today/vote")
-                        .header("Authorization", "Bearer " + token2)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req2)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalVotes", equalTo(2)))
-                .andExpect(jsonPath("$.options[0].votesCount", equalTo(2)));
-
-        // 3. User1 clicks Pizza Place again -> should toggle off (remove vote)
-        mockMvc.perform(post("/api/v1/polls/today/vote")
-                        .header("Authorization", "Bearer " + token1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req1)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalVotes", equalTo(1)))
-                .andExpect(jsonPath("$.options[0].votesCount", equalTo(1)));
-
-        // 4. User1 votes for Burger Hub -> switches/sets vote to Burger Hub
+        // 2. User1 also votes for Burger Hub (multi-choice: both are voted)
         VoteRequest reqBurger = new VoteRequest(r2.getId());
         mockMvc.perform(post("/api/v1/polls/today/vote")
                         .header("Authorization", "Bearer " + token1)
@@ -148,6 +131,26 @@ class PollControllerTest {
                         .content(objectMapper.writeValueAsString(reqBurger)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalVotes", equalTo(2)))
-                .andExpect(jsonPath("$.myVotedRestaurantId", equalTo(r2.getId().intValue())));
+                .andExpect(jsonPath("$.myVotedRestaurantIds", hasItem(r1.getId().intValue())))
+                .andExpect(jsonPath("$.myVotedRestaurantIds", hasItem(r2.getId().intValue())));
+
+        // 3. User2 votes for Pizza Place
+        VoteRequest req2 = new VoteRequest(r1.getId());
+        mockMvc.perform(post("/api/v1/polls/today/vote")
+                        .header("Authorization", "Bearer " + token2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req2)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalVotes", equalTo(3)));
+
+        // 4. User1 clicks Pizza Place again -> toggles off r1, keeps r2
+        mockMvc.perform(post("/api/v1/polls/today/vote")
+                        .header("Authorization", "Bearer " + token1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req1)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalVotes", equalTo(2)))
+                .andExpect(jsonPath("$.myVotedRestaurantIds", not(hasItem(r1.getId().intValue()))))
+                .andExpect(jsonPath("$.myVotedRestaurantIds", hasItem(r2.getId().intValue())));
     }
 }

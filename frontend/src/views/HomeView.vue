@@ -95,25 +95,31 @@
     </div>
 
     <!-- Голосование за выбор ресторана на сегодня -->
-    <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+    <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
             <Vote class="w-5 h-5" />
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 Голосование за выбор ресторана
               </h2>
               <span
                 v-if="todayPoll"
-                class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-900/60"
+                class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-900/60"
               >
                 {{ todayPoll.totalVotes }} {{ getVotesWord(todayPoll.totalVotes) }}
               </span>
+              <span
+                v-if="todayPoll"
+                class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 dark:bg-blue-950/50 text-[#274eac] dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40"
+              >
+                Можно выбрать несколько
+              </span>
             </div>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Каждое утро в 9:00 выбираем, откуда заказываем обед
             </p>
           </div>
@@ -123,10 +129,10 @@
           <button
             @click="startPoll"
             :disabled="startingPoll"
-            class="inline-flex items-center gap-2 bg-[#274eac] hover:bg-[#1f3f8d] text-white font-semibold px-4 py-2 rounded-xl text-xs sm:text-sm shadow-xs transition active:scale-95 disabled:opacity-60 cursor-pointer"
+            class="inline-flex items-center gap-2 bg-[#274eac] hover:bg-[#1f3f8d] text-white font-semibold px-3.5 py-1.5 rounded-xl text-xs shadow-xs transition active:scale-95 disabled:opacity-60 cursor-pointer"
           >
-            <Loader2 v-if="startingPoll" class="w-4 h-4 animate-spin" />
-            <Vote v-else class="w-4 h-4" />
+            <Loader2 v-if="startingPoll" class="w-3.5 h-3.5 animate-spin" />
+            <Vote v-else class="w-3.5 h-3.5" />
             <span>Запустить голосование</span>
           </button>
         </div>
@@ -137,7 +143,7 @@
         <!-- Баннер лидера, если есть голоса -->
         <div
           v-if="leadingOption && leadingOption.votesCount > 0"
-          class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl p-3.5 sm:px-4 text-xs sm:text-sm"
+          class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 rounded-xl px-3.5 py-2 text-xs sm:text-sm"
         >
           <div class="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-medium">
             <span>🏆</span>
@@ -147,103 +153,120 @@
           </div>
           <router-link
             :to="`/create-order?restaurantId=${leadingOption.restaurantId}`"
-            class="inline-flex items-center gap-1.5 font-bold text-[#274eac] dark:text-blue-400 hover:text-[#1f3f8d] dark:hover:text-blue-300 transition shrink-0"
+            class="inline-flex items-center gap-1.5 font-bold text-[#274eac] dark:text-blue-400 hover:text-[#1f3f8d] dark:hover:text-blue-300 transition shrink-0 text-xs"
           >
-            <span>Создать заказ в этом ресторане</span>
-            <ArrowRight class="w-4 h-4" />
+            <span>Создать заказ</span>
+            <ArrowRight class="w-3.5 h-3.5" />
           </router-link>
         </div>
 
-        <!-- Сетка вариантов ресторанов -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-          <div
+        <!-- Компактная сетка вариантов ресторанов -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          <button
             v-for="option in todayPoll.options"
             :key="option.restaurantId"
-            class="relative overflow-hidden rounded-2xl border p-4 transition-all duration-200 flex flex-col justify-between"
+            type="button"
+            @click="vote(option.restaurantId)"
+            :disabled="votingRestaurantId !== null"
+            class="group relative overflow-hidden rounded-xl border p-2.5 sm:p-3 transition-all duration-150 cursor-pointer text-left select-none flex flex-col justify-between"
             :class="
               option.isMyVote
-                ? 'bg-blue-50/50 dark:bg-blue-950/30 border-[#274eac] dark:border-blue-500 shadow-xs'
-                : 'bg-white dark:bg-slate-800/60 hover:bg-slate-50/80 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-800'
+                ? 'bg-blue-50/60 dark:bg-blue-950/40 border-[#274eac] dark:border-blue-500 shadow-2xs ring-1 ring-[#274eac]/20 dark:ring-blue-500/20'
+                : 'bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/80 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
             "
           >
-            <!-- Фоновый индикатор прогресса голосования -->
-            <div
-              class="absolute inset-y-0 left-0 bg-blue-500/10 dark:bg-blue-400/10 pointer-events-none transition-all duration-500"
-              :style="{ width: `${option.percentage}%` }"
-            ></div>
+            <!-- Верхняя строка: Чекбокс, Иконка ресторана, Название, Количество голосов -->
+            <div class="flex items-center justify-between gap-2 w-full">
+              <div class="flex items-center gap-2 min-w-0">
+                <!-- Кастомный чекбокс множественного выбора -->
+                <div
+                  class="w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 transition-colors"
+                  :class="
+                    option.isMyVote
+                      ? 'bg-[#274eac] border-[#274eac] text-white'
+                      : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400'
+                  "
+                >
+                  <Loader2 v-if="votingRestaurantId === option.restaurantId" class="w-2.5 h-2.5 animate-spin text-[#274eac]" />
+                  <Check v-else-if="option.isMyVote" class="w-3 h-3 stroke-[3]" />
+                </div>
 
-            <div class="relative z-10 flex items-start justify-between gap-3">
-              <div class="flex items-center gap-2.5 min-w-0">
+                <!-- Favicon ресторана -->
                 <img
                   v-if="option.restaurantUrl"
                   :src="getFaviconUrl(option.restaurantUrl)"
                   :alt="option.restaurantName"
-                  class="w-5 h-5 rounded-md object-contain shrink-0"
+                  class="w-4 h-4 rounded object-contain shrink-0"
                   @error="($event.target as HTMLElement).style.display = 'none'"
                 />
-                <span class="font-bold text-slate-900 dark:text-slate-100 truncate text-sm sm:text-base">
+
+                <!-- Название ресторана -->
+                <span
+                  class="font-semibold text-slate-900 dark:text-slate-100 truncate text-xs sm:text-sm leading-tight"
+                  :title="option.restaurantName"
+                >
                   {{ option.restaurantName }}
                 </span>
               </div>
 
               <!-- Процент и количество голосов -->
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {{ option.votesCount }}
-                </span>
-                <span class="text-[11px] font-medium text-slate-400">
-                  ({{ option.percentage }}%)
-                </span>
+              <div
+                class="flex items-center gap-1 shrink-0 text-xs font-bold"
+                :class="option.isMyVote ? 'text-[#274eac] dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'"
+              >
+                <span>{{ option.votesCount }}</span>
+                <span class="text-[10px] font-normal text-slate-400">({{ option.percentage }}%)</span>
               </div>
             </div>
 
-            <div class="relative z-10 mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3">
-              <!-- Список проголосовавших аватарок -->
-              <div class="flex items-center -space-x-1.5 overflow-hidden">
+            <!-- Тонкий прогресс-бар -->
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full overflow-hidden mt-2">
+              <div
+                class="h-full rounded-full transition-all duration-300"
+                :class="option.isMyVote ? 'bg-[#274eac] dark:bg-blue-500' : 'bg-slate-400/80 dark:bg-slate-600'"
+                :style="{ width: `${option.percentage}%` }"
+              ></div>
+            </div>
+
+            <!-- Нижняя строка: список проголосовавших (аватарки) -->
+            <div class="flex items-center justify-between gap-1 mt-2 text-[11px]">
+              <div class="flex items-center -space-x-1 overflow-hidden h-5">
                 <template v-if="option.voters && option.voters.length">
                   <UserAvatar
                     v-for="voter in option.voters.slice(0, 5)"
                     :key="voter.id"
                     :src="voter.avatarUrl"
                     :name="voter.fullName"
-                    size-class="w-6 h-6 border-2 border-white dark:border-slate-900"
+                    size-class="w-5 h-5 text-[10px]"
+                    border-class="border border-white dark:border-slate-900"
                     :title="voter.fullName"
                   />
                   <span
                     v-if="option.voters.length > 5"
-                    class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold flex items-center justify-center border-2 border-white dark:border-slate-900"
+                    class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-bold flex items-center justify-center border border-white dark:border-slate-900"
                   >
                     +{{ option.voters.length - 5 }}
                   </span>
                 </template>
-                <span v-else class="text-xs text-slate-400">
-                  Пока нет голосов
+                <span v-else class="text-slate-400 text-[11px]">
+                  Нет голосов
                 </span>
               </div>
 
-              <!-- Кнопка голосования -->
-              <button
-                @click="vote(option.restaurantId)"
-                :disabled="votingRestaurantId !== null"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer disabled:opacity-60"
-                :class="
-                  option.isMyVote
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
-                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'
-                "
+              <span
+                v-if="option.isMyVote"
+                class="text-[10px] font-bold text-[#274eac] dark:text-blue-400 uppercase tracking-wider"
               >
-                <Loader2 v-if="votingRestaurantId === option.restaurantId" class="w-3.5 h-3.5 animate-spin" />
-                <Check v-else-if="option.isMyVote" class="w-3.5 h-3.5" />
-                <span>{{ option.isMyVote ? 'Мой выбор' : 'Голосовать' }}</span>
-              </button>
+                Выбрано
+              </span>
             </div>
-          </div>
+          </button>
         </div>
       </div>
 
       <!-- Если голосование еще не запущено сегодня -->
-      <div v-else-if="!todayPoll" class="text-center py-6">
-        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+      <div v-else-if="!todayPoll" class="text-center py-5">
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
           Сегодня голосование еще не проводилось. Вы можете запустить его прямо сейчас, и бот уведомит команду в Telegram!
         </p>
       </div>

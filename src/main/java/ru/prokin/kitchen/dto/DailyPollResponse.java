@@ -25,5 +25,8 @@ public class DailyPollResponse {
     private Long myVotedRestaurantId;
 
     @Builder.Default
+    private List<Long> myVotedRestaurantIds = new ArrayList<>();
+
+    @Builder.Default
     private List<PollOptionDto> options = new ArrayList<>();
 }

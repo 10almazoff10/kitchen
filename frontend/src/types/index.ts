@@ -180,5 +180,6 @@ export interface DailyPollResponse {
   isActive: boolean;
   totalVotes: number;
   myVotedRestaurantId?: number | null;
+  myVotedRestaurantIds?: number[];
   options: PollOptionDto[];
 }

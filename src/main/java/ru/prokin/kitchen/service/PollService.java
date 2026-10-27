@@ -82,17 +82,16 @@ public class PollService {
         Map<Long, List<PollVote>> votesByRestaurant = allVotes.stream()
                 .collect(Collectors.groupingBy(v -> v.getRestaurant().getId()));
 
-        Long myVotedRestaurantId = null;
+        Set<Long> myVotedRestaurantIds = new HashSet<>();
         if (currentUser != null) {
             for (PollVote v : allVotes) {
                 if (v.getUser().getId().equals(currentUser.getId())) {
-                    myVotedRestaurantId = v.getRestaurant().getId();
-                    break;
+                    myVotedRestaurantIds.add(v.getRestaurant().getId());
                 }
             }
         }
 
-        final Long currentMyVoteId = myVotedRestaurantId;
+        final Set<Long> currentMyVotes = myVotedRestaurantIds;
 
         List<PollOptionDto> options = allRestaurants.stream().map(r -> {
             List<PollVote> rVotes = votesByRestaurant.getOrDefault(r.getId(), Collections.emptyList());
@@ -103,7 +102,7 @@ public class PollService {
                     .map(v -> UserDto.fromEntity(v.getUser()))
                     .collect(Collectors.toList());
 
-            boolean isMyVote = currentMyVoteId != null && currentMyVoteId.equals(r.getId());
+            boolean isMyVote = currentMyVotes.contains(r.getId());
 
             return PollOptionDto.builder()
                     .restaurantId(r.getId())
@@ -121,12 +120,15 @@ public class PollService {
             return a.getRestaurantName().compareToIgnoreCase(b.getRestaurantName());
         }).collect(Collectors.toList());
 
+        Long firstMyVotedId = myVotedRestaurantIds.isEmpty() ? null : myVotedRestaurantIds.iterator().next();
+
         return DailyPollResponse.builder()
                 .id(poll.getId())
                 .pollDate(poll.getPollDate())
                 .active(poll.isActive())
                 .totalVotes(totalVotes)
-                .myVotedRestaurantId(myVotedRestaurantId)
+                .myVotedRestaurantId(firstMyVotedId)
+                .myVotedRestaurantIds(new ArrayList<>(myVotedRestaurantIds))
                 .options(options)
                 .build();
     }
@@ -146,19 +148,12 @@ public class PollService {
         Restaurant restaurant = restaurantRepo.findById(restaurantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ресторан с ID " + restaurantId + " не найден"));
 
-        Optional<PollVote> existing = voteRepo.findByPollAndUser(poll, user);
+        Optional<PollVote> existing = voteRepo.findByPollAndUserAndRestaurant(poll, user, restaurant);
         if (existing.isPresent()) {
-            PollVote current = existing.get();
-            if (current.getRestaurant().getId().equals(restaurantId)) {
-                // Повторный клик снимает голос
-                voteRepo.delete(current);
-            } else {
-                // Переключение голоса на другой ресторан
-                current.setRestaurant(restaurant);
-                current.setVotedAt(LocalDateTime.now());
-                voteRepo.save(current);
-            }
+            // Повторный клик снимает голос с этого конкретного ресторана
+            voteRepo.delete(existing.get());
         } else {
+            // Клик добавляет данный ресторан к выбору пользователя (множественный выбор)
             PollVote newVote = PollVote.builder()
                     .poll(poll)
                     .user(user)
