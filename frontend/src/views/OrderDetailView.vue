@@ -359,7 +359,7 @@
                       v-if="userSummary.userId === authStore.user?.id"
                       class="px-2.5 py-0.5 rounded-full text-[11px] bg-[#eff4fe] dark:bg-blue-950/80 text-[#274eac] dark:text-blue-300 font-bold border border-[#bfdbfe] dark:border-blue-800/60"
                     >
-                      Ваш заказ (Вы)
+                      Ваш заказ
                     </span>
                   </div>
                   <div class="text-xs text-slate-500 dark:text-slate-400">
