@@ -37,8 +37,11 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrderDetail(id));
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(orderService.getOrderDetail(id, user));
     }
 
     @PostMapping

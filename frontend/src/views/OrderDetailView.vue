@@ -324,12 +324,24 @@
 
         <div v-else class="space-y-4">
           <div
-            v-for="userSummary in orderDetail.userSummaries"
+            v-for="userSummary in sortedUserSummaries"
             :key="userSummary.userId"
-            class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden transition"
+            class="bg-white dark:bg-slate-900 border rounded-2xl shadow-xs overflow-hidden transition"
+            :class="
+              userSummary.userId === authStore.user?.id
+                ? 'border-[#274eac]/60 dark:border-blue-500/60 ring-2 ring-[#274eac]/10 dark:ring-blue-500/20'
+                : 'border-slate-200/80 dark:border-slate-800'
+            "
           >
             <!-- Шапка карточки участника -->
-            <div class="px-5 py-4 bg-slate-50/70 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div
+              class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+              :class="
+                userSummary.userId === authStore.user?.id
+                  ? 'bg-blue-50/50 dark:bg-blue-950/30'
+                  : 'bg-slate-50/70 dark:bg-slate-800/60'
+              "
+            >
               <div class="flex items-center gap-3">
                 <UserAvatar
                   :src="userSummary.avatarUrl"
@@ -345,9 +357,9 @@
                     </span>
                     <span
                       v-if="userSummary.userId === authStore.user?.id"
-                      class="px-2 py-0.5 rounded text-[10px] bg-[#eff4fe] dark:bg-blue-950/60 text-[#274eac] dark:text-blue-400 font-bold"
+                      class="px-2.5 py-0.5 rounded-full text-[11px] bg-[#eff4fe] dark:bg-blue-950/80 text-[#274eac] dark:text-blue-300 font-bold border border-[#bfdbfe] dark:border-blue-800/60"
                     >
-                      Вы
+                      Ваш заказ (Вы)
                     </span>
                   </div>
                   <div class="text-xs text-slate-500 dark:text-slate-400">
@@ -716,6 +728,20 @@ const toastStore = useToastStore();
 
 const { currentOrder, loading, error } = storeToRefs(orderStore);
 const orderDetail = computed(() => currentOrder.value);
+
+const sortedUserSummaries = computed(() => {
+  if (!orderDetail.value?.userSummaries) return [];
+  const currentUserId = authStore.user?.id;
+  if (!currentUserId) return orderDetail.value.userSummaries;
+
+  return [...orderDetail.value.userSummaries].sort((a, b) => {
+    const isMeA = a.userId === currentUserId;
+    const isMeB = b.userId === currentUserId;
+    if (isMeA && !isMeB) return -1;
+    if (!isMeA && isMeB) return 1;
+    return 0;
+  });
+});
 
 const isCreator = computed(() => {
   return (

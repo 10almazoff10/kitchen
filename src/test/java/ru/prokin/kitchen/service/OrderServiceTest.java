@@ -156,6 +156,13 @@ class OrderServiceTest {
                 .orElseThrow();
         assertEquals(new BigDecimal("150.00"), participantSummary.getDeliveryCost());
         assertEquals(new BigDecimal("500.00"), participantSummary.getTotalAmount()); // 350 items + 150 delivery
+
+        // Verify currentUser is sorted to the top
+        OrderDetailResponse detailForParticipant = orderService.getOrderDetail(order.getId(), participant);
+        assertEquals(participant.getId(), detailForParticipant.getUserSummaries().get(0).getUserId());
+
+        OrderDetailResponse detailForCreator = orderService.getOrderDetail(order.getId(), creator);
+        assertEquals(creator.getId(), detailForCreator.getUserSummaries().get(0).getUserId());
     }
 
     @Test

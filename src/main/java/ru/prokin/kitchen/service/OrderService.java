@@ -49,6 +49,10 @@ public class OrderService {
     }
 
     public OrderDetailResponse getOrderDetail(Long id) {
+        return getOrderDetail(id, null);
+    }
+
+    public OrderDetailResponse getOrderDetail(Long id, User currentUser) {
         Order order = getOrderEntity(id);
         List<UserOrder> userOrders = userOrderRepo.findWithUserByOrder_Id(id);
 
@@ -80,6 +84,15 @@ public class OrderService {
                             .allPaid(allPaid)
                             .allAdded(allAdded)
                             .build();
+                })
+                .sorted((a, b) -> {
+                    if (currentUser != null && currentUser.getId() != null) {
+                        boolean isMeA = a.getUserId().equals(currentUser.getId());
+                        boolean isMeB = b.getUserId().equals(currentUser.getId());
+                        if (isMeA && !isMeB) return -1;
+                        if (!isMeA && isMeB) return 1;
+                    }
+                    return 0;
                 })
                 .collect(Collectors.toList());
 
