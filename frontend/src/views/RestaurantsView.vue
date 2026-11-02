@@ -51,18 +51,30 @@
       >
         <div class="space-y-3">
           <div class="flex items-start justify-between gap-3">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 line-clamp-1">
-              {{ r.name }}
-            </h3>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 line-clamp-1">
+                  {{ r.name }}
+                </h3>
+                <span
+                  v-if="hasMenu(r)"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80"
+                  title="Для этого ресторана доступна автоматическая загрузка меню с выбором блюд и опций"
+                >
+                  <UtensilsCrossed class="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>Доступно меню</span>
+                </span>
+              </div>
+            </div>
             <div class="w-10 h-10 rounded-xl bg-[#eff4fe] dark:bg-blue-950/60 flex items-center justify-center shrink-0 border border-[#bfdbfe]/60 dark:border-blue-900/60 overflow-hidden">
               <img
-                v-if="r.websiteUrl"
+                v-if="r.websiteUrl && !imageErrors[r.id]"
                 :src="getFaviconUrl(r.websiteUrl)"
                 :alt="r.name"
-                class="w-5 h-5 object-contain"
-                @error="($event.target as HTMLElement).style.display = 'none'"
+                class="w-full h-full object-cover"
+                @error="imageErrors[r.id] = true"
               />
-              <Store v-else class="w-4 h-4 text-[#274eac] dark:text-blue-400" />
+              <Store v-else class="w-5 h-5 text-[#274eac] dark:text-blue-400" />
             </div>
           </div>
 
@@ -209,6 +221,7 @@ import {
   Trash2,
   Loader2,
   AlertCircle,
+  UtensilsCrossed,
 } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -218,6 +231,14 @@ const restaurants = ref<RestaurantResponse[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const searchQuery = ref('');
+const imageErrors = ref<Record<number, boolean>>({});
+
+function hasMenu(r: RestaurantResponse): boolean {
+  if (r.hasMenu !== undefined && r.hasMenu !== null) return r.hasMenu;
+  const url = (r.websiteUrl || '').toLowerCase();
+  const name = r.name.toLowerCase();
+  return url.includes('grilnica') || url.includes('pizzburg') || name.includes('грильниц') || name.includes('пицбург');
+}
 
 // Модальное окно
 const showModal = ref(false);

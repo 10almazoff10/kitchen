@@ -83,7 +83,7 @@ public class LdapAuthService {
             User localUser = localUserOpt.get();
             if (localUser.getPassword() != null &&
                     (passwordEncoder.matches(password, localUser.getPassword()) || password.equals(localUser.getPassword()))) {
-                boolean requiresLink = !localUser.isAdLinked();
+                boolean requiresLink = ldapEnabled && !localUser.isAdLinked();
                 logger.info("Local/legacy authentication successful for user '{}' (id={}), requiresAdLink={}",
                         localUser.getUsername(), localUser.getId(), requiresLink);
                 return new AuthResult(localUser, requiresLink);
@@ -338,7 +338,7 @@ public class LdapAuthService {
             User user = userOpt.get();
             if (user.getPassword() != null &&
                     (passwordEncoder.matches(password, user.getPassword()) || password.equals(user.getPassword()))) {
-                return new AuthResult(user, !user.isAdLinked());
+                return new AuthResult(user, ldapEnabled && !user.isAdLinked());
             }
             throw new BadCredentialsException("Неверный логин или пароль");
         }

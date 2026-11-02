@@ -21,11 +21,12 @@ export const useAuthStore = defineStore('auth', () => {
       ? JSON.parse(localStorage.getItem('kitchen_user') as string)
       : null
   );
+  const isLdapEnabled = ref<boolean>(localStorage.getItem('kitchen_ldap_enabled') === 'true');
   const loading = ref(false);
 
   const isAuthenticated = computed(() => !!token.value || !!refreshToken.value);
 
-  function setAuthData(data: { token: string; refreshToken?: string; user?: User }) {
+  function setAuthData(data: { token: string; refreshToken?: string; user?: User; ldapEnabled?: boolean }) {
     token.value = data.token;
     localStorage.setItem('kitchen_token', data.token);
 
@@ -36,6 +37,22 @@ export const useAuthStore = defineStore('auth', () => {
     if (data.user) {
       user.value = data.user;
       localStorage.setItem('kitchen_user', JSON.stringify(data.user));
+    }
+    if (data.ldapEnabled !== undefined) {
+      isLdapEnabled.value = data.ldapEnabled;
+      localStorage.setItem('kitchen_ldap_enabled', String(data.ldapEnabled));
+    }
+  }
+
+  async function fetchAuthConfig() {
+    try {
+      const resp = await api.get('/auth/config');
+      if (resp.data && resp.data.ldapEnabled !== undefined) {
+        isLdapEnabled.value = Boolean(resp.data.ldapEnabled);
+        localStorage.setItem('kitchen_ldap_enabled', String(resp.data.ldapEnabled));
+      }
+    } catch {
+      // ignore
     }
   }
 
@@ -123,6 +140,8 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     loading,
     isAuthenticated,
+    isLdapEnabled,
+    fetchAuthConfig,
     setAuthData,
     login,
     linkAd,

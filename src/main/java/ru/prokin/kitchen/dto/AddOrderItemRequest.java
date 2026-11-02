@@ -21,4 +21,6 @@ public class AddOrderItemRequest {
     @NotNull(message = "Цена обязательна")
     @DecimalMin(value = "0.0", inclusive = true, message = "Цена не может быть отрицательной")
     private BigDecimal price;
+
+    private String externalData;
 }

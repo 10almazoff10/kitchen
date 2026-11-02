@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { ShieldAlert, Loader2, Info } from 'lucide-vue-next';
@@ -11,8 +11,12 @@ const username = ref('');
 const password = ref('');
 const error = ref<string | null>(null);
 
+onMounted(() => {
+  authStore.fetchAuthConfig();
+});
+
 watch(() => authStore.user?.isAdLinked, (linked) => {
-  if (linked) {
+  if (linked || !authStore.isLdapEnabled) {
     router.push('/');
   }
 });
@@ -26,7 +30,7 @@ async function onSubmit() {
   error.value = null;
   try {
     const res = await authStore.login(username.value.trim(), password.value);
-    if (!res.requiresAdLink) {
+    if (!res.requiresAdLink || !authStore.isLdapEnabled) {
       router.push('/');
     }
   } catch (err: any) {
@@ -50,8 +54,8 @@ async function onSubmit() {
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Вход в корпоративную систему заказов</p>
       </div>
 
-      <!-- Подсказка для старых пользователей -->
-      <div class="mb-5 p-3.5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/50 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5 leading-relaxed">
+      <!-- Подсказка для старых пользователей (только если включен AD) -->
+      <div v-if="authStore.isLdapEnabled" class="mb-5 p-3.5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/50 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5 leading-relaxed">
         <Info class="w-4 h-4 shrink-0 text-[#274eac] dark:text-blue-400 mt-0.5" />
         <div>
           <strong class="font-semibold">Пользователям старой версии:</strong> введите ваш прежний логин и пароль — система автоматически предложит привязать корпоративную учетную запись AD для переноса истории.
@@ -65,13 +69,15 @@ async function onSubmit() {
 
       <form @submit.prevent="onSubmit" class="space-y-5">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">Доменный логин</label>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+            {{ authStore.isLdapEnabled ? 'Доменный логин' : 'Логин' }}
+          </label>
           <input
             v-model="username"
             type="text"
             required
             autocomplete="username"
-            placeholder="например, ivanov"
+            :placeholder="authStore.isLdapEnabled ? 'например, ivanov' : 'ваш логин'"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#274eac]/20 focus:border-[#274eac] transition text-sm"
           />
         </div>

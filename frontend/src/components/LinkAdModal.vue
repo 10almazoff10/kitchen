@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useToastStore } from '../stores/toast';
-import { ShieldCheck, ShieldAlert, Loader2, LogOut, KeyRound } from 'lucide-vue-next';
+import { ShieldCheck, ShieldAlert, Loader2, LogOut, KeyRound, X } from 'lucide-vue-next';
 
 const props = defineProps<{
   userFullName?: string;
@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'success'): void;
+  (e: 'close'): void;
 }>();
 
 const authStore = useAuthStore();
@@ -52,7 +53,15 @@ function onLogout() {
       class="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6 animate-in fade-in zoom-in-95 duration-200"
     >
       <!-- Заголовок и иконка -->
-      <div class="text-center space-y-2">
+      <div class="relative text-center space-y-2">
+        <button
+          type="button"
+          @click="emit('close')"
+          class="absolute -top-2 -right-2 p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+          title="Закрыть"
+        >
+          <X class="w-5 h-5" />
+        </button>
         <div class="w-14 h-14 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 text-[#274eac] dark:text-blue-400 rounded-2xl mx-auto flex items-center justify-center shadow-xs">
           <ShieldCheck class="w-7 h-7" />
         </div>
@@ -123,6 +132,14 @@ function onLogout() {
             <Loader2 v-if="authStore.loading" class="w-4 h-4 animate-spin" />
             <KeyRound v-else class="w-4 h-4" />
             <span>{{ authStore.loading ? 'Проверка в AD...' : 'Привязать и войти' }}</span>
+          </button>
+
+          <button
+            type="button"
+            @click="emit('close')"
+            class="w-full sm:w-auto py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-sm transition flex items-center justify-center cursor-pointer"
+          >
+            Пропустить
           </button>
 
           <button

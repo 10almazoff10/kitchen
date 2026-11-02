@@ -62,12 +62,12 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 p-1.5 flex items-center justify-center shrink-0">
+              <div class="w-10 h-10 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
                 <img
                   v-if="orderDetail.order.restaurant.websiteUrl"
                   :src="getFaviconUrl(orderDetail.order.restaurant.websiteUrl)"
                   alt=""
-                  class="w-6 h-6 rounded object-contain"
+                  class="w-full h-full object-cover"
                   @error="($event.target as HTMLElement).style.display = 'none'"
                 />
                 <UtensilsCrossed v-else class="w-5 h-5 text-slate-400" />
@@ -222,17 +222,147 @@
         v-if="!isOrderClosed && isOrderAccepting"
         class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-5"
       >
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-[#274eac] text-white flex items-center justify-center shrink-0 shadow-sm">
-            <Plus class="w-5 h-5" />
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#274eac] text-white flex items-center justify-center shrink-0 shadow-sm">
+              <Plus class="w-5 h-5" />
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">
+                {{ restaurantMenu.length > 0 ? 'Выбрать блюдо из меню' : 'Добавить блюдо в заказ' }}
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                {{ restaurantMenu.length > 0 ? 'Выберите позицию из официального меню ресторана' : 'Укажите название и стоимость блюда' }}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">Добавить блюдо в заказ</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Укажите название и стоимость блюда</p>
+          <div
+            v-if="loadingMenu"
+            class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-xl bg-blue-50/70 dark:bg-blue-950/40 text-[#274eac] dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40 animate-pulse"
+          >
+            <Loader2 class="w-3.5 h-3.5 animate-spin" />
+            <span>Загрузка меню ресторана...</span>
           </div>
         </div>
 
+        <!-- 1. Для ресторанов С МЕНЮ: выбор только из меню (произвольный ввод убран) -->
+        <div v-if="restaurantMenu.length > 0" class="space-y-4 pt-1">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <!-- Быстрый поиск по меню ресторана с выпадающим списком -->
+            <div class="relative flex-1">
+              <Search class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                v-model="menuQuickSearch"
+                type="text"
+                placeholder="Поиск по меню ресторана (например, Шаурма, Пицца, Роллини)..."
+                @focus="showMenuQuickDropdown = true"
+                @blur="onQuickSearchBlur"
+                autocomplete="off"
+                class="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#274eac]/20 focus:border-[#274eac] text-sm"
+              />
+              <button
+                v-if="menuQuickSearch"
+                type="button"
+                @mousedown.prevent="menuQuickSearch = ''"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
+              >
+                <X class="w-3.5 h-3.5" />
+              </button>
+
+              <!-- Выпадающий список поиска по меню -->
+              <div
+                v-if="showMenuQuickDropdown && quickSearchResults.length > 0"
+                class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-700/60 animate-in fade-in slide-in-from-top-1 duration-150"
+              >
+                <div class="px-3.5 py-2 bg-slate-50 dark:bg-slate-900/40 text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                  <span>{{ menuQuickSearch ? `Найдено в меню (${quickSearchResults.length})` : 'Популярные блюда из меню' }}</span>
+                  <span>Нажмите для выбора</span>
+                </div>
+                <div class="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/60">
+                  <button
+                    v-for="dish in quickSearchResults"
+                    :key="dish.externalId || dish.title"
+                    type="button"
+                    @mousedown.prevent="handleQuickPickDish(dish)"
+                    class="w-full px-3.5 py-2.5 text-left hover:bg-blue-50 dark:hover:bg-blue-950/50 flex items-center justify-between gap-3 transition cursor-pointer group"
+                  >
+                    <div class="flex items-center gap-3 min-w-0">
+                      <img
+                        v-if="dish.imageUrl"
+                        :src="dish.imageUrl"
+                        :alt="dish.title || dish.name"
+                        class="w-10 h-10 rounded-xl object-cover bg-slate-100 dark:bg-slate-700 shrink-0"
+                        loading="lazy"
+                      />
+                      <div v-else class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0 text-slate-400">
+                        <UtensilsCrossed class="w-4 h-4" />
+                      </div>
+                      <div class="min-w-0">
+                        <div class="text-sm font-medium text-slate-900 dark:text-slate-100 truncate group-hover:text-[#274eac] dark:group-hover:text-blue-300">
+                          {{ dish.title || dish.name }}
+                        </div>
+                        <div class="text-xs text-slate-400 flex items-center gap-2">
+                          <span v-if="dish.category" class="font-medium text-slate-500 dark:text-slate-400">{{ dish.category }}</span>
+                          <span v-if="dish.weight" class="text-slate-400">· {{ dish.weight }}</span>
+                          <span
+                            v-if="(dish.variants && dish.variants.length > 0) || (dish.optionCategories && dish.optionCategories.length > 0)"
+                            class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300"
+                          >
+                            Опции
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <div class="text-sm font-bold font-mono text-[#274eac] dark:text-blue-400">
+                        {{ dish.price }} ₽
+                      </div>
+                      <span class="text-[11px] text-slate-400 group-hover:text-[#274eac] dark:group-hover:text-blue-300">
+                        {{ (dish.variants && dish.variants.length > 0) || (dish.optionCategories && dish.optionCategories.length > 0) ? 'Настроить →' : 'Добавить +' }}
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              @click="showMenuCatalogModal = true"
+              class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#274eac] hover:bg-[#1f3f8d] text-white font-medium text-sm shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+            >
+              <BookOpen class="w-4 h-4" />
+              <span>Каталог ресторана</span>
+            </button>
+          </div>
+
+          <!-- Быстрые категории ресторана -->
+          <div v-if="catalogCategories.length > 2" class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+            <span class="text-slate-400 text-[11px] font-medium mr-1 shrink-0">Категории:</span>
+            <button
+              v-for="cat in catalogCategories.slice(1)"
+              :key="cat"
+              type="button"
+              @click="openCatalogWithCategory(cat)"
+              class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition cursor-pointer shrink-0 font-medium"
+            >
+              {{ cat }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Пока меню загружается -->
+        <div
+          v-else-if="loadingMenu"
+          class="flex items-center justify-center gap-3 py-8 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 text-slate-500 animate-pulse text-sm"
+        >
+          <Loader2 class="w-5 h-5 animate-spin text-[#274eac] dark:text-blue-400" />
+          <span>Загружается меню ресторана...</span>
+        </div>
+
+        <!-- 3. Для ресторанов БЕЗ МЕНЮ: произвольный ручной ввод блюд -->
         <form
+          v-else
           @submit.prevent="submitManualItem"
           class="space-y-3 pt-1"
         >
@@ -245,7 +375,7 @@
                 v-model="manualItemDescription"
                 type="text"
                 required
-                placeholder="Например, Пицца Пепперони 30 см"
+                placeholder="Например, Обед, Пицца, Бургер"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#274eac]/20 focus:border-[#274eac] text-sm"
               />
             </div>
@@ -678,6 +808,145 @@
         </form>
       </div>
     </div>
+
+    <!-- Модальное окно: Каталог меню ресторана -->
+    <div
+      v-if="showMenuCatalogModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/60 backdrop-blur-xs"
+      @click.self="showMenuCatalogModal = false"
+    >
+      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
+        <!-- Шапка каталога -->
+        <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#274eac] dark:text-blue-300 flex items-center justify-center">
+                <BookOpen class="w-5 h-5" />
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  Меню {{ orderDetail?.order?.restaurant?.name || 'ресторана' }}
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  Найдено {{ filteredCatalogDishes.length }} из {{ restaurantMenu.length }} позиций
+                </p>
+              </div>
+            </div>
+            <button
+              @click="showMenuCatalogModal = false"
+              class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            >
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+
+          <!-- Строка поиска по меню -->
+          <div class="relative">
+            <Search class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              v-model="catalogSearchQuery"
+              type="text"
+              placeholder="Поиск по названию или ингредиентам (например, шаурма, пепперони)..."
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#274eac]/20 focus:border-[#274eac]"
+            />
+            <button
+              v-if="catalogSearchQuery"
+              type="button"
+              @click="catalogSearchQuery = ''"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer"
+            >
+              Очистить
+            </button>
+          </div>
+
+          <!-- Категории (горизонтальная прокрутка) -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+            <button
+              v-for="cat in catalogCategories"
+              :key="cat"
+              type="button"
+              @click="selectedCatalogCategory = cat"
+              class="px-3 py-1.5 rounded-xl font-medium shrink-0 transition cursor-pointer"
+              :class="selectedCatalogCategory === cat
+                ? 'bg-[#274eac] text-white shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'"
+            >
+              {{ cat }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Список карточек блюд -->
+        <div class="p-5 sm:p-6 overflow-y-auto flex-1">
+          <div v-if="loadingMenu" class="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
+            <Loader2 class="w-8 h-8 animate-spin text-[#274eac] dark:text-blue-400" />
+            <span class="text-sm font-medium">Загрузка меню ресторана...</span>
+          </div>
+          <div v-else-if="filteredCatalogDishes.length === 0" class="py-12 text-center text-slate-400 dark:text-slate-500">
+            По вашему запросу ничего не найдено
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div
+              v-for="dish in filteredCatalogDishes"
+              :key="dish.externalId || dish.title"
+              class="border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3 flex flex-col justify-between hover:border-[#bfdbfe] dark:hover:border-blue-800/80 hover:shadow-md transition bg-white dark:bg-slate-800/60 group"
+            >
+              <div class="space-y-2">
+                <div class="relative w-full aspect-4/3 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700/60">
+                  <img
+                    v-if="dish.imageUrl"
+                    :src="dish.imageUrl"
+                    :alt="dish.title || dish.name"
+                    class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    loading="lazy"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">
+                    <UtensilsCrossed class="w-10 h-10" />
+                  </div>
+                  <span
+                    v-if="dish.weight"
+                    class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[11px] font-medium"
+                  >
+                    {{ dish.weight }}
+                  </span>
+                </div>
+                <div>
+                  <div class="text-xs text-slate-400 font-medium">{{ dish.category }}</div>
+                  <h4 class="font-bold text-slate-900 dark:text-slate-100 text-sm line-clamp-1 group-hover:text-[#274eac] dark:group-hover:text-blue-300">
+                    {{ dish.title || dish.name }}
+                  </h4>
+                  <p v-if="dish.description" class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+                    {{ dish.description }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between gap-2">
+                <div class="text-base font-extrabold font-mono text-slate-900 dark:text-slate-100">
+                  {{ dish.price }} ₽
+                </div>
+                <button
+                  type="button"
+                  @click="onSelectDish(dish)"
+                  class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#274eac] hover:bg-[#1f3f8d] text-white shadow-xs transition active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <SlidersHorizontal v-if="(dish.variants && dish.variants.length > 0) || (dish.optionCategories && dish.optionCategories.length > 0)" class="w-3.5 h-3.5" />
+                  <span>{{ (dish.variants && dish.variants.length > 0) || (dish.optionCategories && dish.optionCategories.length > 0) ? 'Настроить' : 'Выбрать' }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно: Настройка параметров блюда (размер, соус, добавки и др.) -->
+    <DishCustomizerModal
+      :is-open="showCustomizerModal"
+      :dish="customizingDish"
+      @close="showCustomizerModal = false"
+      @add="onCustomizerAdd"
+    />
   </div>
 </template>
 
@@ -689,6 +958,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useToastStore } from '@/stores/toast';
 import { storeToRefs } from 'pinia';
 import UserAvatar from '@/components/UserAvatar.vue';
+import DishCustomizerModal from '@/components/DishCustomizerModal.vue';
 import {
   formatPrice,
   formatDateTime,
@@ -696,7 +966,8 @@ import {
   isDeadlinePassed,
   getFaviconUrl,
 } from '@/utils/format';
-import type { OrderItemResponse, DishSuggestionDto } from '@/types';
+import type { OrderItemResponse, DishSuggestionDto, ParsedMenuItemDto } from '@/types';
+import api from '@/api/client';
 import {
   ArrowLeft,
   RefreshCw,
@@ -717,6 +988,10 @@ import {
   Pencil,
   Trash2,
   History,
+  BookOpen,
+  Search,
+  X,
+  SlidersHorizontal,
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -815,11 +1090,231 @@ const showEditCommentModal = ref(false);
 const editCommentValue = ref('');
 const updatingComment = ref(false);
 
+// Меню ресторана (API провайдер / парсинг)
+const restaurantMenu = ref<ParsedMenuItemDto[]>([]);
+const loadingMenu = ref(false);
+const showMenuDropdown = ref(false);
+const showMenuCatalogModal = ref(false);
+const catalogSearchQuery = ref('');
+const selectedCatalogCategory = ref<string>('Все');
+
+// Быстрый поиск по меню ресторана
+const menuQuickSearch = ref('');
+const showMenuQuickDropdown = ref(false);
+
+const quickSearchResults = computed(() => {
+  const q = menuQuickSearch.value.trim().toLowerCase();
+  if (!restaurantMenu.value.length) return [];
+  if (!q) {
+    return restaurantMenu.value.slice(0, 8);
+  }
+  return restaurantMenu.value
+    .filter((d) => {
+      const title = (d.title || d.name || '').toLowerCase();
+      const desc = (d.description || '').toLowerCase();
+      const cat = (d.category || '').toLowerCase();
+      return title.includes(q) || desc.includes(q) || cat.includes(q);
+    })
+    .slice(0, 8);
+});
+
+function handleQuickPickDish(dish: ParsedMenuItemDto) {
+  showMenuQuickDropdown.value = false;
+  menuQuickSearch.value = '';
+  onSelectDish(dish);
+}
+
+function onQuickSearchBlur() {
+  setTimeout(() => {
+    showMenuQuickDropdown.value = false;
+  }, 250);
+}
+
+function openCatalogWithCategory(cat: string) {
+  selectedCatalogCategory.value = cat;
+  showMenuCatalogModal.value = true;
+}
+
+// Настройка блюда (модификаторы, размеры, добавки)
+const showCustomizerModal = ref(false);
+const customizingDish = ref<ParsedMenuItemDto | null>(null);
+
+function formatDishName(dish: ParsedMenuItemDto): string {
+  const rawName = (dish.title || dish.name).trim();
+  const category = (dish.category || '').trim();
+  if (category && !rawName.toLowerCase().startsWith(category.toLowerCase())) {
+    return `${category} - ${rawName}`;
+  }
+  return rawName;
+}
+
+const matchedDishWithCustomization = computed(() => {
+  const desc = manualItemDescription.value.trim().toLowerCase();
+  if (!desc || !restaurantMenu.value.length) return null;
+  return (
+    restaurantMenu.value.find((d) => {
+      const title = (d.title || d.name || '').toLowerCase();
+      const hasVars = d.variants && d.variants.length > 0;
+      const hasOpts = d.optionCategories && d.optionCategories.length > 0;
+      return (hasVars || hasOpts) && (title === desc || desc.startsWith(title));
+    }) || null
+  );
+});
+
+const menuAutocompleteResults = computed(() => {
+  const query = manualItemDescription.value.trim().toLowerCase();
+  if (query.length < 2 || !restaurantMenu.value.length) return [];
+  return restaurantMenu.value
+    .filter((dish) => {
+      const title = (dish.title || dish.name || '').toLowerCase();
+      const desc = (dish.description || '').toLowerCase();
+      return title.includes(query) || desc.includes(query);
+    })
+    .slice(0, 6);
+});
+
+const catalogCategories = computed(() => {
+  const set = new Set<string>();
+  restaurantMenu.value.forEach((d) => {
+    if (d.category) set.add(d.category);
+  });
+  return ['Все', ...Array.from(set)];
+});
+
+const filteredCatalogDishes = computed(() => {
+  let list = restaurantMenu.value;
+  if (selectedCatalogCategory.value !== 'Все') {
+    list = list.filter((d) => d.category === selectedCatalogCategory.value);
+  }
+  const q = catalogSearchQuery.value.trim().toLowerCase();
+  if (q) {
+    list = list.filter((d) => {
+      const title = (d.title || d.name || '').toLowerCase();
+      const desc = (d.description || '').toLowerCase();
+      return title.includes(q) || desc.includes(q);
+    });
+  }
+  return list;
+});
+
+async function loadRestaurantMenu(restaurantId: number) {
+  loadingMenu.value = true;
+  try {
+    const resp = await api.get<ParsedMenuItemDto[]>(`/restaurants/${restaurantId}/menu`);
+    restaurantMenu.value = resp.data || [];
+  } catch (err) {
+    console.error('Failed to load restaurant menu', err);
+    restaurantMenu.value = [];
+  } finally {
+    loadingMenu.value = false;
+  }
+}
+
+function selectMenuItem(dish: ParsedMenuItemDto) {
+  manualItemDescription.value = formatDishName(dish);
+  if (dish.price !== undefined && dish.price !== null) {
+    manualPrice.value = dish.price;
+  }
+  showMenuDropdown.value = false;
+  showMenuCatalogModal.value = false;
+}
+
+async function onSelectDish(dish: ParsedMenuItemDto) {
+  const hasVariants = dish.variants && dish.variants.length > 0;
+  const hasOptions = dish.optionCategories && dish.optionCategories.length > 0;
+
+  if (hasVariants || hasOptions) {
+    customizingDish.value = dish;
+    showCustomizerModal.value = true;
+    showMenuDropdown.value = false;
+    showMenuQuickDropdown.value = false;
+  } else {
+    // Если у ресторана есть меню — добавляем позицию сразу в заказ без ручного ввода
+    if (restaurantMenu.value.length > 0) {
+      const desc = formatDishName(dish);
+      addingItem.value = true;
+      try {
+        let externalData: string | undefined = undefined;
+        if (dish.rawData) {
+          const grilnicaCartItem = {
+            product: dish.rawData,
+            count: 1,
+            price: dish.price,
+            allOptionPrice: 0,
+            fullPrice: dish.price,
+            maxCountInOrder: 50,
+            productId: null,
+            productVariantId: null,
+            selectedOptions: [],
+            selectedProductId: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+          };
+          externalData = JSON.stringify(grilnicaCartItem);
+        }
+
+        await orderStore.addItem(orderId, {
+          itemDescription: desc,
+          price: dish.price,
+          externalData,
+        });
+        toastStore.success(`Добавлено: ${desc}`);
+        showMenuDropdown.value = false;
+        showMenuQuickDropdown.value = false;
+        showMenuCatalogModal.value = false;
+      } catch (err: any) {
+        toastStore.error(err.response?.data?.message || 'Не удалось добавить блюдо');
+      } finally {
+        addingItem.value = false;
+      }
+    } else {
+      selectMenuItem(dish);
+    }
+  }
+}
+
+async function onCustomizerAdd(item: { itemDescription: string; price: number; externalData?: string }) {
+  showCustomizerModal.value = false;
+  customizingDish.value = null;
+
+  addingItem.value = true;
+  try {
+    await orderStore.addItem(orderId, {
+      itemDescription: item.itemDescription,
+      price: item.price,
+      externalData: item.externalData,
+    });
+    toastStore.success(`Добавлено: ${item.itemDescription}`);
+
+    const existingIndex = dishSuggestions.value.findIndex(
+      (d) => d.itemDescription.toLowerCase() === item.itemDescription.toLowerCase()
+    );
+    if (existingIndex >= 0) {
+      dishSuggestions.value.splice(existingIndex, 1);
+    }
+    dishSuggestions.value.unshift({
+      itemDescription: item.itemDescription,
+      price: item.price,
+    });
+  } catch (err: any) {
+    toastStore.error(err.response?.data?.message || 'Не удалось добавить блюдо');
+  } finally {
+    addingItem.value = false;
+  }
+}
+
+function onManualDescriptionBlur() {
+  setTimeout(() => {
+    showMenuDropdown.value = false;
+  }, 200);
+}
+
 async function loadOrder() {
   try {
     await orderStore.fetchOrderDetail(orderId);
     if (orderDetail.value?.order?.restaurant?.id) {
-      await loadSuggestions(orderDetail.value.order.restaurant.id);
+      await Promise.allSettled([
+        loadSuggestions(orderDetail.value.order.restaurant.id),
+        loadRestaurantMenu(orderDetail.value.order.restaurant.id),
+      ]);
     }
   } catch (err) {
     console.error('Failed to load order detail', err);

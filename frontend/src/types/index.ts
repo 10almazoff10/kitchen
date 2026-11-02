@@ -15,6 +15,7 @@ export interface AuthResponse {
   tokenType: string;
   user: UserDto;
   requiresAdLink?: boolean;
+  ldapEnabled?: boolean;
 }
 
 export interface RestaurantResponse {
@@ -22,6 +23,7 @@ export interface RestaurantResponse {
   name: string;
   websiteUrl?: string;
   createdAt?: string;
+  hasMenu?: boolean;
 }
 
 export interface OrderItemResponse {
@@ -39,6 +41,7 @@ export interface OrderItemResponse {
   paid?: boolean;
   createdDate?: string;
   rating?: number | null;
+  externalData?: string;
 }
 
 export interface UserOrderSummaryDto {
@@ -91,6 +94,7 @@ export interface CloseOrderRequest {
 export interface AddOrderItemRequest {
   itemDescription: string;
   price: number;
+  externalData?: string;
 }
 
 export interface UpdateOrderItemRequest {
@@ -142,11 +146,41 @@ export interface NotPaidOrdersResponse {
   totalCount: number;
 }
 
+export interface MenuItemVariantDto {
+  id?: string;
+  name: string;
+  price: number;
+  weight?: string;
+  isDefault?: boolean;
+}
+
+export interface MenuItemOptionDto {
+  id?: string;
+  name: string;
+  price: number;
+  isDefault?: boolean;
+}
+
+export interface MenuItemOptionCategoryDto {
+  id?: string;
+  name: string;
+  min?: number;
+  max?: number;
+  options: MenuItemOptionDto[];
+}
+
 export interface ParsedMenuItemDto {
+  title?: string;
   name: string;
   price: number;
   description?: string;
   imageUrl?: string;
+  category?: string;
+  weight?: string;
+  externalId?: string;
+  variants?: MenuItemVariantDto[];
+  optionCategories?: MenuItemOptionCategoryDto[];
+  rawData?: any;
 }
 
 export interface Page<T> {

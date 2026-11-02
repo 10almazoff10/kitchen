@@ -42,6 +42,7 @@ public class AuthController {
                 .tokenType("Bearer")
                 .user(UserDto.fromEntity(user))
                 .requiresAdLink(authResult.isRequiresAdLink())
+                .ldapEnabled(ldapAuthService.isLdapEnabled())
                 .build();
 
         return ResponseEntity.ok(response);
@@ -58,6 +59,7 @@ public class AuthController {
                 .refreshToken(newRefreshToken.getToken())
                 .tokenType("Bearer")
                 .user(UserDto.fromEntity(user))
+                .ldapEnabled(ldapAuthService.isLdapEnabled())
                 .build();
 
         return ResponseEntity.ok(response);
@@ -93,6 +95,11 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/config")
+    public ResponseEntity<java.util.Map<String, Object>> getAuthConfig() {
+        return ResponseEntity.ok(java.util.Map.of("ldapEnabled", ldapAuthService.isLdapEnabled()));
     }
 
     @GetMapping("/me")

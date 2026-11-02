@@ -27,6 +27,8 @@ function handleLogout() {
   router.push('/login');
 }
 
+const adLinkDismissed = ref(sessionStorage.getItem('kitchen_ad_dismissed') === 'true');
+
 function handleAdLinked() {
   orderStore.fetchUnpaidOrders();
   if (route.name === 'login') {
@@ -34,8 +36,14 @@ function handleAdLinked() {
   }
 }
 
+function handleAdDismiss() {
+  adLinkDismissed.value = true;
+  sessionStorage.setItem('kitchen_ad_dismissed', 'true');
+}
+
 onMounted(() => {
   themeStore.initTheme();
+  authStore.fetchAuthConfig();
   if (authStore.isAuthenticated) {
     authStore.fetchMe();
     orderStore.fetchUnpaidOrders();
@@ -186,12 +194,13 @@ onMounted(() => {
       Kitchen &copy; 2026 &bull; Сервис совместных заказов
     </footer>
 
-    <!-- Модальное окно обязательной привязки Active Directory -->
+    <!-- Модальное окно привязки Active Directory (только если LDAP включен на сервере) -->
     <LinkAdModal
-      v-if="authStore.isAuthenticated && authStore.user && authStore.user.isAdLinked === false"
+      v-if="authStore.isLdapEnabled && authStore.isAuthenticated && authStore.user && authStore.user.isAdLinked === false && !adLinkDismissed"
       :user-full-name="authStore.user.fullName"
       :legacy-username="authStore.user.legacyUsername || authStore.user.username"
       @success="handleAdLinked"
+      @close="handleAdDismiss"
     />
 
     <!-- Модальное окно профиля и настроек Gravatar -->

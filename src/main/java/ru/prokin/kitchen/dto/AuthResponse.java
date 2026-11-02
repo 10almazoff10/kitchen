@@ -16,4 +16,5 @@ public class AuthResponse {
     private String tokenType = "Bearer";
     private UserDto user;
     private boolean requiresAdLink;
+    private boolean ldapEnabled;
 }

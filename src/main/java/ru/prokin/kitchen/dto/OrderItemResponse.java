@@ -26,6 +26,7 @@ public class OrderItemResponse {
     private boolean isPaid;
     private LocalDateTime createdDate;
     private Integer rating;
+    private String externalData;
 
     @com.fasterxml.jackson.annotation.JsonProperty("addedToRestaurantOrder")
     public boolean isAddedToRestaurantOrder() {
@@ -65,6 +66,7 @@ public class OrderItemResponse {
                 .isPaid(item.isPaid())
                 .createdDate(item.getCreatedDate())
                 .rating(item.getRating())
+                .externalData(item.getExternalData())
                 .build();
     }
 }

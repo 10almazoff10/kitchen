@@ -114,4 +114,19 @@ class RestaurantControllerTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void testGetRestaurantMenuGrilnica() throws Exception {
+        Restaurant r = new Restaurant();
+        r.setName("Грильница");
+        r.setWebsiteUrl("https://barnaul.grilnica.ru");
+        Restaurant saved = restaurantRepository.save(r);
+
+        mockMvc.perform(get("/api/v1/restaurants/" + saved.getId() + "/menu")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", not(empty())))
+                .andExpect(jsonPath("$[0].title", notNullValue()))
+                .andExpect(jsonPath("$[0].price", notNullValue()));
+    }
 }

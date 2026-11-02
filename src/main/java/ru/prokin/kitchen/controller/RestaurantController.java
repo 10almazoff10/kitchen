@@ -26,20 +26,23 @@ public class RestaurantController {
     @GetMapping
     public ResponseEntity<List<RestaurantResponse>> getAllRestaurants() {
         List<RestaurantResponse> list = restaurantService.getAllRestaurants().stream()
-                .map(RestaurantResponse::fromEntity)
+                .map(r -> RestaurantResponse.fromEntity(r, menuParserService.hasProvider(r.getWebsiteUrl(), r.getName())))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RestaurantResponse> getRestaurantById(@PathVariable Long id) {
-        return ResponseEntity.ok(RestaurantResponse.fromEntity(restaurantService.getRestaurantById(id)));
+        Restaurant r = restaurantService.getRestaurantById(id);
+        boolean hasMenu = r != null && menuParserService.hasProvider(r.getWebsiteUrl(), r.getName());
+        return ResponseEntity.ok(RestaurantResponse.fromEntity(r, hasMenu));
     }
 
     @PostMapping
     public ResponseEntity<RestaurantResponse> createRestaurant(@Valid @RequestBody RestaurantRequest request) {
         Restaurant created = restaurantService.createRestaurant(request.getName(), request.getWebsiteUrl());
-        return ResponseEntity.ok(RestaurantResponse.fromEntity(created));
+        boolean hasMenu = menuParserService.hasProvider(created.getWebsiteUrl(), created.getName());
+        return ResponseEntity.ok(RestaurantResponse.fromEntity(created, hasMenu));
     }
 
     @PutMapping("/{id}")
@@ -48,7 +51,8 @@ public class RestaurantController {
             @Valid @RequestBody RestaurantRequest request
     ) {
         Restaurant updated = restaurantService.updateRestaurant(id, request.getName(), request.getWebsiteUrl());
-        return ResponseEntity.ok(RestaurantResponse.fromEntity(updated));
+        boolean hasMenu = menuParserService.hasProvider(updated.getWebsiteUrl(), updated.getName());
+        return ResponseEntity.ok(RestaurantResponse.fromEntity(updated, hasMenu));
     }
 
     @DeleteMapping("/{id}")
@@ -60,5 +64,14 @@ public class RestaurantController {
     @PostMapping("/parse-menu")
     public ResponseEntity<List<ParsedMenuItemDto>> parseMenu(@Valid @RequestBody ParseMenuRequest request) {
         return ResponseEntity.ok(menuParserService.parseMenu(request.getUrl()));
+    }
+
+    @GetMapping("/{id}/menu")
+    public ResponseEntity<List<ParsedMenuItemDto>> getRestaurantMenu(@PathVariable Long id) {
+        Restaurant restaurant = restaurantService.getRestaurantById(id);
+        if (restaurant == null || !org.springframework.util.StringUtils.hasText(restaurant.getWebsiteUrl())) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(menuParserService.parseMenu(restaurant.getWebsiteUrl()));
     }
 }

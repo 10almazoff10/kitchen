@@ -50,6 +50,7 @@ public class UserOrderItemService {
         item.setDeliveryCost(BigDecimal.ZERO);
         item.setPaid(false);
         item.setAddedToRestaurantOrder(false);
+        item.setExternalData(request.getExternalData());
 
         UserOrder saved = userOrderRepo.save(item);
         return OrderItemResponse.fromEntity(saved);
