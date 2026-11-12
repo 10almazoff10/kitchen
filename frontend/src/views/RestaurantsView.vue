@@ -237,7 +237,8 @@ function hasMenu(r: RestaurantResponse): boolean {
   if (r.hasMenu !== undefined && r.hasMenu !== null) return r.hasMenu;
   const url = (r.websiteUrl || '').toLowerCase();
   const name = r.name.toLowerCase();
-  return url.includes('grilnica') || url.includes('pizzburg') || name.includes('грильниц') || name.includes('пицбург');
+  return url.includes('grilnica') || url.includes('pizzburg') || url.includes('shampur')
+    || name.includes('грильниц') || name.includes('пицбург') || name.includes('шампур');
 }
 
 // Модальное окно
