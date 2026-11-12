@@ -24,6 +24,7 @@ public class OrderItemResponse {
     private BigDecimal totalCost;
     private boolean isAddedToRestaurantOrder;
     private boolean isPaid;
+    private boolean isPaidVerified;
     private LocalDateTime createdDate;
     private Integer rating;
     private String externalData;
@@ -48,6 +49,21 @@ public class OrderItemResponse {
         return isPaid;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("paidVerified")
+    public boolean isPaidVerified() {
+        return isPaidVerified;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("isPaidVerified")
+    public boolean getIsPaidVerified() {
+        return isPaidVerified;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("paymentVerified")
+    public boolean getPaymentVerified() {
+        return isPaidVerified;
+    }
+
     public static OrderItemResponse fromEntity(UserOrder item) {
         if (item == null) return null;
         BigDecimal delivery = item.getDeliveryCost() != null ? item.getDeliveryCost() : BigDecimal.ZERO;
@@ -64,6 +80,7 @@ public class OrderItemResponse {
                 .totalCost(price.add(delivery))
                 .isAddedToRestaurantOrder(item.isAddedToRestaurantOrder())
                 .isPaid(item.isPaid())
+                .isPaidVerified(item.isPaidVerified())
                 .createdDate(item.getCreatedDate())
                 .rating(item.getRating())
                 .externalData(item.getExternalData())

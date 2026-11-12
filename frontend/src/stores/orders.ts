@@ -164,6 +164,19 @@ export const useOrderStore = defineStore('orders', () => {
     }
   }
 
+  async function togglePaymentVerified(itemId: number) {
+    try {
+      const res = await api.patch(`/items/${itemId}/toggle-payment-verified`);
+      if (currentOrder.value) {
+        await fetchOrderDetail(currentOrder.value.order.id);
+      }
+      return res.data;
+    } catch (err: any) {
+      error.value = err.response?.data?.message || 'Не удалось изменить статус проверки оплаты';
+      throw err;
+    }
+  }
+
   async function toggleAdded(itemId: number) {
     try {
       const res = await api.patch(`/items/${itemId}/toggle-added`);
@@ -225,6 +238,16 @@ export const useOrderStore = defineStore('orders', () => {
       await fetchOrderDetail(orderId);
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Не удалось отметить оплату';
+      throw err;
+    }
+  }
+
+  async function toggleUserPaymentVerified(orderId: number, userId: number) {
+    try {
+      await api.post(`/orders/${orderId}/users/${userId}/toggle-payment-verified`);
+      await fetchOrderDetail(orderId);
+    } catch (err: any) {
+      error.value = err.response?.data?.message || 'Не удалось изменить статус проверки оплаты';
       throw err;
     }
   }
@@ -316,9 +339,11 @@ export const useOrderStore = defineStore('orders', () => {
     updateItem,
     deleteItem,
     togglePaid,
+    togglePaymentVerified,
     toggleAdded,
     rateItem,
     markUserPaid,
+    toggleUserPaymentVerified,
     markUserAdded,
     fetchUnpaidOrders,
     fetchRatingsLeaderboard,

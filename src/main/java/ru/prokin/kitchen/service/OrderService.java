@@ -69,6 +69,7 @@ public class OrderService {
                     BigDecimal delivery = items.get(0).getDeliveryCost() != null ? items.get(0).getDeliveryCost() : BigDecimal.ZERO;
                     boolean allPaid = items.stream().allMatch(UserOrder::isPaid);
                     boolean allAdded = items.stream().allMatch(UserOrder::isAddedToRestaurantOrder);
+                    boolean allPaidVerified = items.stream().allMatch(UserOrder::isPaidVerified);
 
                     List<OrderItemResponse> itemDtos = items.stream()
                             .map(OrderItemResponse::fromEntity)
@@ -83,6 +84,8 @@ public class OrderService {
                             .totalAmount(itemsTotal.add(delivery))
                             .allPaid(allPaid)
                             .allAdded(allAdded)
+                            .allPaidVerified(allPaidVerified)
+                            .paymentVerified(allPaidVerified)
                             .build();
                 })
                 .sorted((a, b) -> {

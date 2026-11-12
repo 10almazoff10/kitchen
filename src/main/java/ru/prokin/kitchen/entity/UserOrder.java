@@ -31,6 +31,9 @@ public class UserOrder {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isPaid = false;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isPaidVerified = false;
+
     @Column(name = "created_date", nullable = false)
     private LocalDateTime createdDate = LocalDateTime.now();
 
@@ -64,6 +67,9 @@ public class UserOrder {
 
     public boolean isPaid() { return isPaid; }
     public void setPaid(boolean paid) { isPaid = paid; }
+
+    public boolean isPaidVerified() { return isPaidVerified; }
+    public void setPaidVerified(boolean paidVerified) { isPaidVerified = paidVerified; }
 
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }

@@ -56,6 +56,14 @@ public class UserOrderItemController {
         return ResponseEntity.ok(itemService.togglePaid(itemId, user));
     }
 
+    @PatchMapping("/items/{itemId}/toggle-payment-verified")
+    public ResponseEntity<OrderItemResponse> togglePaymentVerified(
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(itemService.togglePaymentVerified(itemId, user));
+    }
+
     @PatchMapping("/items/{itemId}/toggle-added")
     public ResponseEntity<OrderItemResponse> toggleAdded(
             @PathVariable Long itemId,
@@ -80,6 +88,16 @@ public class UserOrderItemController {
             @AuthenticationPrincipal User user
     ) {
         itemService.markUserItemsPaid(orderId, userId, user);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/orders/{orderId}/users/{userId}/toggle-payment-verified")
+    public ResponseEntity<Void> toggleUserPaymentVerified(
+            @PathVariable Long orderId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal User user
+    ) {
+        itemService.toggleUserPaymentVerified(orderId, userId, user);
         return ResponseEntity.ok().build();
     }
 

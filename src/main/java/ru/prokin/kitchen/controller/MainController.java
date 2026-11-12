@@ -200,8 +200,13 @@ public class MainController {
 
     @PostMapping("/mark-paid/{userOrderId}")
     public String markPaid(@PathVariable Long userOrderId, Authentication auth) {
-        kitchenService.markUserOrderAsPaid(userOrderId);
         UserOrder userOrder = kitchenService.getUserOrderByUserOrderId(userOrderId);
+        String username = auth.getName();
+        User currentUser = (User) userService.loadUserByUsername(username);
+        if (currentUser == null || !userOrder.getUser().getId().equals(currentUser.getId())) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Вы можете отмечать оплату только для своих позиций");
+        }
+        kitchenService.markUserOrderAsPaid(userOrderId);
         Long orderId = userOrder.getOrder().getId();
         return "redirect:/order/" + orderId;
     }
@@ -230,7 +235,12 @@ public class MainController {
     }
 
     @PostMapping("/mark-paid-user/{userId}")
-    public String markAllPaid(@PathVariable Long userId, @RequestParam Long orderId) {
+    public String markAllPaid(@PathVariable Long userId, @RequestParam Long orderId, Authentication auth) {
+        String username = auth.getName();
+        User currentUser = (User) userService.loadUserByUsername(username);
+        if (currentUser == null || !currentUser.getId().equals(userId)) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Вы можете отмечать оплату только для своего заказа");
+        }
         kitchenService.markAllItemsPaidByUser(orderId, userId);
         return "redirect:/order/" + orderId;
     }

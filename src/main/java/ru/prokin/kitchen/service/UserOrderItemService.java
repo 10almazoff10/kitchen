@@ -96,12 +96,33 @@ public class UserOrderItemService {
         UserOrder item = userOrderRepo.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Позиция с ID " + itemId + " не найдена"));
 
-        // Отметить оплату может либо сам участник, либо создатель заказа
-        if (!item.getUser().getId().equals(user.getId()) && !item.getOrder().getCreatedBy().getId().equals(user.getId())) {
-            throw new BadRequestException("У вас нет прав изменять статус оплаты этой позиции");
+        // Отметить оплату может только сам участник
+        if (!item.getUser().getId().equals(user.getId())) {
+            throw new BadRequestException("Вы можете изменять статус оплаты только для своих позиций");
         }
 
         item.setPaid(!item.isPaid());
+        if (!item.isPaid()) {
+            item.setPaidVerified(false);
+        }
+        UserOrder saved = userOrderRepo.save(item);
+        return OrderItemResponse.fromEntity(saved);
+    }
+
+    @Transactional
+    public OrderItemResponse togglePaymentVerified(Long itemId, User user) {
+        UserOrder item = userOrderRepo.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Позиция с ID " + itemId + " не найдена"));
+
+        if (!item.getOrder().getCreatedBy().getId().equals(user.getId())) {
+            throw new BadRequestException("Только создатель заказа может подтверждать оплату");
+        }
+
+        boolean nextState = !item.isPaidVerified();
+        item.setPaidVerified(nextState);
+        if (nextState) {
+            item.setPaid(true);
+        }
         UserOrder saved = userOrderRepo.save(item);
         return OrderItemResponse.fromEntity(saved);
     }
@@ -137,15 +158,38 @@ public class UserOrderItemService {
 
     @Transactional
     public void markUserItemsPaid(Long orderId, Long targetUserId, User currentUser) {
-        Order order = orderRepo.findById(orderId)
+        orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Заказ с ID " + orderId + " не найден"));
 
-        if (!order.getCreatedBy().getId().equals(currentUser.getId()) && !currentUser.getId().equals(targetUserId)) {
-            throw new BadRequestException("Недостаточно прав для отметки оплаты");
+        if (!currentUser.getId().equals(targetUserId)) {
+            throw new BadRequestException("Вы можете отмечать оплату только для своего заказа");
         }
 
         List<UserOrder> items = userOrderRepo.findByOrder_IdAndUser_Id(orderId, targetUserId);
         items.forEach(i -> i.setPaid(true));
+        userOrderRepo.saveAll(items);
+    }
+
+    @Transactional
+    public void toggleUserPaymentVerified(Long orderId, Long targetUserId, User currentUser) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Заказ с ID " + orderId + " не найден"));
+
+        if (!order.getCreatedBy().getId().equals(currentUser.getId())) {
+            throw new BadRequestException("Только создатель заказа может подтверждать оплату");
+        }
+
+        List<UserOrder> items = userOrderRepo.findByOrder_IdAndUser_Id(orderId, targetUserId);
+        if (items.isEmpty()) return;
+
+        boolean allVerified = items.stream().allMatch(UserOrder::isPaidVerified);
+        boolean nextState = !allVerified;
+        items.forEach(i -> {
+            i.setPaidVerified(nextState);
+            if (nextState) {
+                i.setPaid(true);
+            }
+        });
         userOrderRepo.saveAll(items);
     }
 

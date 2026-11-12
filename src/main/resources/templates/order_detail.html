@@ -186,13 +186,16 @@
                     <!-- Статус оплаты -->
                     <td class="align-middle text-center">
                         <span th:if="${summary.allPaid}" class="badge-paid">Оплачено</span>
-                        <form th:unless="${summary.allPaid}"
-                              method="post"
-                              th:action="@{/mark-paid-user/{userId}(userId=${summary.userId})}"
-                              style="display:inline;">
-                            <input type="hidden" name="orderId" th:value="${order.id}"/>
-                            <button type="submit" class="btn-paid-modern">Оплатил</button>
-                        </form>
+                        <div th:unless="${summary.allPaid}">
+                            <form th:if="${summary.userId == currentUserId}"
+                                  method="post"
+                                  th:action="@{/mark-paid-user/{userId}(userId=${summary.userId})}"
+                                  style="display:inline;">
+                                <input type="hidden" name="orderId" th:value="${order.id}"/>
+                                <button type="submit" class="btn-paid-modern">Оплатил</button>
+                            </form>
+                            <span th:unless="${summary.userId == currentUserId}" class="text-muted">Не оплачено</span>
+                        </div>
                     </td>
 
                     <!-- Действия -->

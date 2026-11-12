@@ -239,6 +239,7 @@ public class KitchenService {
 
             boolean allPaid = items.stream().allMatch(UserOrder::isPaid);
             boolean allAdded = items.stream().allMatch(UserOrder::isAddedToRestaurantOrder);
+            boolean allPaidVerified = items.stream().allMatch(UserOrder::isPaidVerified);
 
             return new UserOrderSummary(
                 first.getUser().getId(),
@@ -246,7 +247,8 @@ public class KitchenService {
                 items,
                 deliveryCost,
                 allPaid,
-                allAdded
+                allAdded,
+                allPaidVerified
             );
         }).collect(Collectors.toList());
     }

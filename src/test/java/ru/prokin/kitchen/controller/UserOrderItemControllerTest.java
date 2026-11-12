@@ -145,6 +145,135 @@ class UserOrderItemControllerTest {
     }
 
     @Test
+    void testTogglePaid_ForbiddenForOtherUserEvenIfCreator() throws Exception {
+        User otherUser = new User();
+        otherUser.setUsername("other_paid_user");
+        otherUser.setFullName("Other Paid User");
+        otherUser.setPassword("pwd");
+        otherUser = userRepository.save(otherUser);
+
+        UserOrder item = new UserOrder();
+        item.setOrder(order);
+        item.setUser(otherUser);
+        item.setItemDescription("Dumplings");
+        item.setPrice(new BigDecimal("180.00"));
+        item.setPaid(false);
+        item = userOrderRepository.save(item);
+
+        // 'user' is creator of order, but NOT owner of item -> must be forbidden
+        mockMvc.perform(patch("/api/v1/items/" + item.getId() + "/toggle-paid")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+
+        // otherUser is owner of item -> should succeed
+        String otherToken = jwtTokenProvider.generateToken(otherUser);
+        mockMvc.perform(patch("/api/v1/items/" + item.getId() + "/toggle-paid")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paid", equalTo(true)));
+    }
+
+    @Test
+    void testMarkUserPaid_OnlyAllowedForSelf() throws Exception {
+        User otherUser = new User();
+        otherUser.setUsername("other_bulk_user");
+        otherUser.setFullName("Other Bulk User");
+        otherUser.setPassword("pwd");
+        otherUser = userRepository.save(otherUser);
+
+        UserOrder item = new UserOrder();
+        item.setOrder(order);
+        item.setUser(otherUser);
+        item.setItemDescription("Curry");
+        item.setPrice(new BigDecimal("350.00"));
+        item.setPaid(false);
+        userOrderRepository.save(item);
+
+        // 'user' (creator) tries to mark paid for otherUser -> must fail
+        mockMvc.perform(post("/api/v1/orders/" + order.getId() + "/users/" + otherUser.getId() + "/mark-paid")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+
+        // otherUser marks paid for themselves -> must succeed
+        String otherToken = jwtTokenProvider.generateToken(otherUser);
+        mockMvc.perform(post("/api/v1/orders/" + order.getId() + "/users/" + otherUser.getId() + "/mark-paid")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testTogglePaymentVerified_OnlyAllowedForCreator() throws Exception {
+        User otherUser = new User();
+        otherUser.setUsername("other_verified_user");
+        otherUser.setFullName("Other Verified User");
+        otherUser.setPassword("pwd");
+        otherUser = userRepository.save(otherUser);
+
+        UserOrder item = new UserOrder();
+        item.setOrder(order);
+        item.setUser(otherUser);
+        item.setItemDescription("Ramen");
+        item.setPrice(new BigDecimal("400.00"));
+        item.setPaid(false);
+        item.setPaidVerified(false);
+        item = userOrderRepository.save(item);
+
+        String otherToken = jwtTokenProvider.generateToken(otherUser);
+
+        // Non-creator attempts to verify payment -> must be rejected
+        mockMvc.perform(patch("/api/v1/items/" + item.getId() + "/toggle-payment-verified")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isBadRequest());
+
+        // Creator verifies payment -> succeeds and automatically sets paid to true
+        mockMvc.perform(patch("/api/v1/items/" + item.getId() + "/toggle-payment-verified")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paidVerified", equalTo(true)))
+                .andExpect(jsonPath("$.paid", equalTo(true)));
+
+        // Creator unchecks payment verification
+        mockMvc.perform(patch("/api/v1/items/" + item.getId() + "/toggle-payment-verified")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paidVerified", equalTo(false)));
+    }
+
+    @Test
+    void testToggleUserPaymentVerified_OnlyAllowedForCreator() throws Exception {
+        User otherUser = new User();
+        otherUser.setUsername("other_bulk_verified");
+        otherUser.setFullName("Other Bulk Verified");
+        otherUser.setPassword("pwd");
+        otherUser = userRepository.save(otherUser);
+
+        UserOrder item = new UserOrder();
+        item.setOrder(order);
+        item.setUser(otherUser);
+        item.setItemDescription("Pho Bo");
+        item.setPrice(new BigDecimal("380.00"));
+        item.setPaid(false);
+        item.setPaidVerified(false);
+        userOrderRepository.save(item);
+
+        String otherToken = jwtTokenProvider.generateToken(otherUser);
+
+        // Non-creator attempts to toggle user payment verification
+        mockMvc.perform(post("/api/v1/orders/" + order.getId() + "/users/" + otherUser.getId() + "/toggle-payment-verified")
+                        .header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isBadRequest());
+
+        // Creator verifies user payment
+        mockMvc.perform(post("/api/v1/orders/" + order.getId() + "/users/" + otherUser.getId() + "/toggle-payment-verified")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        UserOrder updated = userOrderRepository.findById(item.getId()).orElseThrow();
+        org.junit.jupiter.api.Assertions.assertTrue(updated.isPaidVerified());
+        org.junit.jupiter.api.Assertions.assertTrue(updated.isPaid());
+    }
+
+    @Test
     void testToggleAdded_Success() throws Exception {
         UserOrder item = new UserOrder();
         item.setOrder(order);

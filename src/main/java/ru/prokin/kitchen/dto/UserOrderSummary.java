@@ -12,16 +12,25 @@ public class UserOrderSummary {
     private BigDecimal deliveryCost;
     private boolean allPaid;
     private boolean allAddedToRestaurantOrder;
+    private boolean allPaidVerified;
 
     public UserOrderSummary(Long userId, String fullName, List<UserOrder> items,
                            BigDecimal deliveryCost,
                            boolean allPaid, boolean allAddedToRestaurantOrder) {
+        this(userId, fullName, items, deliveryCost, allPaid, allAddedToRestaurantOrder, false);
+    }
+
+    public UserOrderSummary(Long userId, String fullName, List<UserOrder> items,
+                           BigDecimal deliveryCost,
+                           boolean allPaid, boolean allAddedToRestaurantOrder,
+                           boolean allPaidVerified) {
         this.userId = userId;
         this.fullName = fullName;
         this.items = items;
         this.deliveryCost = deliveryCost;
         this.allPaid = allPaid;
         this.allAddedToRestaurantOrder = allAddedToRestaurantOrder;
+        this.allPaidVerified = allPaidVerified;
     }
 
     // Геттеры
@@ -47,5 +56,9 @@ public class UserOrderSummary {
 
     public boolean isAllAddedToRestaurantOrder() {
         return allAddedToRestaurantOrder;
+    }
+
+    public boolean isAllPaidVerified() {
+        return allPaidVerified;
     }
 }

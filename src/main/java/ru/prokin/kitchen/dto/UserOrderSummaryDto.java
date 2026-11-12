@@ -21,4 +21,6 @@ public class UserOrderSummaryDto {
     private BigDecimal totalAmount;
     private boolean allPaid;
     private boolean allAdded;
+    private boolean allPaidVerified;
+    private boolean paymentVerified;
 }

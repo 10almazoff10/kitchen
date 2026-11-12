@@ -39,6 +39,9 @@ export interface OrderItemResponse {
   addedToRestaurantOrder?: boolean;
   isPaid?: boolean;
   paid?: boolean;
+  isPaidVerified?: boolean;
+  paidVerified?: boolean;
+  paymentVerified?: boolean;
   createdDate?: string;
   rating?: number | null;
   externalData?: string;
@@ -53,6 +56,8 @@ export interface UserOrderSummaryDto {
   totalAmount: number;
   allPaid: boolean;
   allAdded: boolean;
+  allPaidVerified?: boolean;
+  paymentVerified?: boolean;
 }
 
 export interface OrderResponse {

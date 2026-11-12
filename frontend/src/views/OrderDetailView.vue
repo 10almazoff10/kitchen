@@ -498,7 +498,7 @@
                 </div>
               </div>
 
-              <!-- Сумма и массовые действия для создателя -->
+              <!-- Сумма и действия -->
               <div class="flex flex-wrap items-center gap-3 self-end sm:self-auto">
                 <div class="text-right">
                   <div class="text-xs text-slate-400 dark:text-slate-500">Итого с доставкой</div>
@@ -507,83 +507,190 @@
                   </div>
                 </div>
 
-                <div v-if="isCreator" class="flex items-center gap-1.5 pl-2 border-l border-slate-200 dark:border-slate-700">
-                  <button
-                    @click="markUserPaid(userSummary.userId)"
-                    class="px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer"
-                    :class="userSummary.allPaid ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'"
-                    title="Отметить все позиции пользователя как оплаченные"
+                  <!-- Кнопка «Оплатить все» для самого участника заказа -->
+                  <div
+                    v-if="userSummary.userId === authStore.user?.id"
+                    class="flex items-center gap-1.5 pl-2 border-l border-slate-200 dark:border-slate-700"
                   >
-                    {{ userSummary.allPaid ? 'Оплачено ✓' : 'Оплатить все' }}
-                  </button>
-                  <button
-                    @click="markUserAdded(userSummary.userId)"
-                    class="px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer"
-                    :class="userSummary.allAdded ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300' : 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'"
-                    title="Отметить все позиции пользователя в чеке"
+                    <button
+                      v-if="!userSummary.allPaid"
+                      @click="markUserPaid(userSummary.userId)"
+                      class="px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                      title="Отметить все свои позиции как оплаченные"
+                    >
+                      Оплатить все
+                    </button>
+                    <span
+                      v-else
+                      class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300"
+                    >
+                      <CheckCircle2 class="w-3.5 h-3.5" />
+                      <span>Оплачено ✓</span>
+                    </span>
+                  </div>
+
+                  <!-- Блок действий создателя сбора: чекбокс «Оплата проверена» и «В чек все» -->
+                  <div v-if="isCreator" class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+                    <label
+                      class="inline-flex items-center gap-2 px-2.5 py-1 text-xs font-semibold rounded-lg border transition cursor-pointer select-none"
+                      :class="
+                        (userSummary.allPaidVerified ?? userSummary.paymentVerified)
+                          ? 'bg-emerald-100/80 dark:bg-emerald-950/70 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200'
+                          : 'bg-white dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60'
+                      "
+                      title="Создатель: подтвердить поступление оплаты от участника"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="userSummary.allPaidVerified ?? userSummary.paymentVerified"
+                        @change="toggleUserPaymentVerified(userSummary.userId)"
+                        class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-600 dark:bg-slate-900 cursor-pointer accent-emerald-600"
+                      />
+                      <span>Оплата проверена</span>
+                    </label>
+
+                    <button
+                      @click="markUserAdded(userSummary.userId)"
+                      class="px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer"
+                      :class="userSummary.allAdded ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300' : 'bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'"
+                      title="Отметить все позиции пользователя в чеке"
+                    >
+                      {{ userSummary.allAdded ? 'В чеке ✓' : 'В чек все' }}
+                    </button>
+                  </div>
+
+                  <!-- Информационный статус для остальных участников (не создатель и не текущий пользователь) -->
+                  <div
+                    v-else-if="userSummary.userId !== authStore.user?.id"
+                    class="flex items-center pl-2 border-l border-slate-200 dark:border-slate-700 text-xs"
                   >
-                    {{ userSummary.allAdded ? 'В чеке ✓' : 'В чек все' }}
-                  </button>
+                    <span
+                      v-if="userSummary.allPaidVerified ?? userSummary.paymentVerified"
+                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300"
+                    >
+                      <CheckCheck class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Оплата проверена</span>
+                    </span>
+                    <span
+                      v-else-if="userSummary.allPaid"
+                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                    >
+                      <Clock class="w-3.5 h-3.5 text-amber-500" />
+                      <span>Ожидает проверки</span>
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                    >
+                      <span>Не оплачено</span>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Список блюд этого участника -->
-            <div class="divide-y divide-slate-100 dark:divide-slate-800">
-              <div
-                v-for="item in userSummary.items"
-                :key="item.id"
-                class="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:bg-slate-50/40 dark:hover:bg-slate-800/40 transition"
-              >
-                <div class="space-y-1">
-                  <div class="font-medium text-slate-900 dark:text-slate-100">
-                    {{ item.itemDescription }}
+              <!-- Список блюд этого участника -->
+              <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                <div
+                  v-for="item in userSummary.items"
+                  :key="item.id"
+                  class="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:bg-slate-50/40 dark:hover:bg-slate-800/40 transition"
+                >
+                  <div class="space-y-1">
+                    <div class="font-medium text-slate-900 dark:text-slate-100">
+                      {{ item.itemDescription }}
+                    </div>
+                    <div class="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-2">
+                      <span>{{ formatPrice(item.price) }}</span>
+                      <span v-if="item.deliveryCost > 0">+ {{ formatPrice(item.deliveryCost) }} доставка</span>
+                      <span class="font-semibold text-slate-700 dark:text-slate-300">= {{ formatPrice(item.totalCost) }}</span>
+                    </div>
                   </div>
-                  <div class="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-2">
-                    <span>{{ formatPrice(item.price) }}</span>
-                    <span v-if="item.deliveryCost > 0">+ {{ formatPrice(item.deliveryCost) }} доставка</span>
-                    <span class="font-semibold text-slate-700 dark:text-slate-300">= {{ formatPrice(item.totalCost) }}</span>
-                  </div>
-                </div>
 
-                <!-- Статусы: Оплачено, В чеке, Оценка, Действия -->
-                <div class="flex flex-wrap items-center gap-3">
-                  <!-- Чекбокс / кнопка Оплачено -->
-                  <button
-                    @click="togglePaid(item.id)"
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer"
-                    :class="
-                      (item.paid ?? item.isPaid)
-                        ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                    "
-                  >
-                    <CheckCircle2 v-if="item.paid ?? item.isPaid" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <Circle v-else class="w-3.5 h-3.5 text-slate-400" />
-                    <span>{{ (item.paid ?? item.isPaid) ? 'Оплачено' : 'Не оплачено' }}</span>
-                  </button>
+                  <!-- Статусы: Оплачено, Проверено, В чеке, Оценка, Действия -->
+                  <div class="flex flex-wrap items-center gap-3">
+                    <!-- Кнопка «Оплачено» интерактивна ТОЛЬКО для владельца позиции -->
+                    <button
+                      v-if="userSummary.userId === authStore.user?.id"
+                      @click="togglePaid(item.id)"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer"
+                      :class="
+                        (item.paid ?? item.isPaid)
+                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      "
+                      title="Нажмите, чтобы изменить статус оплаты своего блюда"
+                    >
+                      <CheckCircle2 v-if="item.paid ?? item.isPaid" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <Circle v-else class="w-3.5 h-3.5 text-slate-400" />
+                      <span>{{ (item.paid ?? item.isPaid) ? 'Оплачено' : 'Не оплачено' }}</span>
+                    </button>
 
-                  <!-- Чекбокс / кнопка В чеке -->
-                  <button
-                    v-if="isCreator"
-                    @click="toggleAdded(item.id)"
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer"
-                    :class="
-                      (item.addedToRestaurantOrder ?? item.isAddedToRestaurantOrder)
-                        ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/60'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                    "
-                  >
-                    <CheckCircle2 v-if="item.addedToRestaurantOrder ?? item.isAddedToRestaurantOrder" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                    <Circle v-else class="w-3.5 h-3.5 text-slate-400" />
-                    <span>{{ (item.addedToRestaurantOrder ?? item.isAddedToRestaurantOrder) ? 'В чеке' : 'Не в чеке' }}</span>
-                  </button>
-                  <span
-                    v-else-if="item.addedToRestaurantOrder ?? item.isAddedToRestaurantOrder"
-                    class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300"
-                  >
-                    В чеке
-                  </span>
+                    <!-- Для чужих блюд статус оплаты статичен (некликабелен) -->
+                    <span
+                      v-else
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium select-none"
+                      :class="
+                        (item.paid ?? item.isPaid)
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800/50'
+                          : 'bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500'
+                      "
+                    >
+                      <CheckCircle2 v-if="item.paid ?? item.isPaid" class="w-3.5 h-3.5 text-emerald-600/70 dark:text-emerald-400/70" />
+                      <Circle v-else class="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
+                      <span>{{ (item.paid ?? item.isPaid) ? 'Оплачено' : 'Не оплачено' }}</span>
+                    </span>
+
+                    <!-- Чекбокс проверки оплаты на уровне позиции (для создателя) -->
+                    <label
+                      v-if="isCreator"
+                      class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium cursor-pointer transition border border-transparent select-none"
+                      :class="
+                        (item.paidVerified ?? item.isPaidVerified ?? item.paymentVerified)
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60'
+                          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      "
+                      title="Создатель: подтвердить оплату этой позиции"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="item.paidVerified ?? item.isPaidVerified ?? item.paymentVerified"
+                        @change="togglePaymentVerified(item.id)"
+                        class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-600 dark:bg-slate-900 cursor-pointer accent-emerald-600"
+                      />
+                      <span>Проверено</span>
+                    </label>
+
+                    <!-- Индикатор проверки оплаты для остальных пользователей -->
+                    <span
+                      v-else-if="item.paidVerified ?? item.isPaidVerified ?? item.paymentVerified"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60"
+                      title="Оплата позиции проверена создателем"
+                    >
+                      <CheckCheck class="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <span>Проверено</span>
+                    </span>
+
+                    <!-- Чекбокс / кнопка В чеке -->
+                    <button
+                      v-if="isCreator"
+                      @click="toggleAdded(item.id)"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer"
+                      :class="
+                        (item.addedToRestaurantOrder ?? item.isAddedToRestaurantOrder)
+                          ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/60'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      "
+                    >
+                      <CheckCircle2 v-if="item.addedToRestaurantOrder ?? item.isAddedToRestaurantOrder" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <Circle v-else class="w-3.5 h-3.5 text-slate-400" />
+                      <span>{{ (item.addedToRestaurantOrder ?? item.isAddedToRestaurantOrder) ? 'В чеке' : 'Не в чеке' }}</span>
+                    </button>
+                    <span
+                      v-else-if="item.addedToRestaurantOrder ?? item.isAddedToRestaurantOrder"
+                      class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300"
+                    >
+                      В чеке
+                    </span>
 
                   <!-- Звёздочки рейтинга (1-5) -->
                   <div class="flex items-center gap-0.5" title="Оцените блюдо">
@@ -983,6 +1090,7 @@ import {
   Users,
   UtensilsCrossed,
   CheckCircle2,
+  CheckCheck,
   Circle,
   Star,
   Pencil,
@@ -1422,9 +1530,26 @@ async function rateItem(itemId: number, rating: number) {
 async function markUserPaid(userId: number) {
   try {
     await orderStore.markUserPaid(orderId, userId);
-    toastStore.success('Оплата пользователя отмечена');
+    toastStore.success('Оплата отмечена');
   } catch (err: any) {
     toastStore.error(err.response?.data?.message || 'Ошибка отметки оплаты');
+  }
+}
+
+async function togglePaymentVerified(itemId: number) {
+  try {
+    await orderStore.togglePaymentVerified(itemId);
+  } catch (err: any) {
+    toastStore.error(err.response?.data?.message || 'Ошибка проверки оплаты');
+  }
+}
+
+async function toggleUserPaymentVerified(userId: number) {
+  try {
+    await orderStore.toggleUserPaymentVerified(orderId, userId);
+    toastStore.success('Статус проверки оплаты обновлен');
+  } catch (err: any) {
+    toastStore.error(err.response?.data?.message || 'Ошибка проверки оплаты');
   }
 }
 
